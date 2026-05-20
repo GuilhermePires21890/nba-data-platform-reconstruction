@@ -26,7 +26,7 @@ def consolidate_datasets() -> pd.DataFrame:
     consolidated_dataframes = []
 
     for csv_file in csv_files:
-        df = pd.read_csv(csv_file)
+        df = pd.read_csv(csv_file, sep=';')
 
         df = normalize_columns(df)
 

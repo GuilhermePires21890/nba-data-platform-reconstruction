@@ -1,7 +1,7 @@
 # 🏀 NBA Data Platform Reconstruction
 
 > **From academic scraper to professional Data Engineering platform.**  
-> A full modernization of a legacy NBA analytics project — preserving its origin, elevating its engineering.
+> A full modernization of a legacy NBA analytics project - preserving its origin, elevating its engineering.
 
 [![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=flat&logo=python&logoColor=white)](https://python.org)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-336791?style=flat&logo=postgresql&logoColor=white)](https://postgresql.org)
@@ -18,9 +18,9 @@ This project started as a **university assignment** in 2021/2022 at Instituto Su
 
 The original goal was simple: extract historical NBA player statistics using web scraping.
 
-The result was a working **end-to-end pipeline** built with C#, Selenium, CSV files, SQL Server and R — scraping **25 seasons of NBA data (1996–2021)**, covering **11,460 player records** across **332,340 data fields**.
+The result was a working **end-to-end pipeline** built with C#, Selenium, CSV files, SQL Server and R - scraping **25 seasons of NBA data (1996–2021)**, covering **11,460 player records** across **332,340 data fields**.
 
-**This repository is the reconstruction** — taking that academic foundation and rebuilding it as a professional Data Engineering and Analytics platform, demonstrating technical evolution, architectural maturity and modern engineering practices.
+**This repository is the reconstruction** - taking that academic foundation and rebuilding it as a professional Data Engineering and Analytics platform, demonstrating technical evolution, architectural maturity and modern engineering practices.
 
 ---
 
@@ -90,7 +90,24 @@ flowchart TD
 
 Built with **Metabase** on top of **PostgreSQL**, covering 25 seasons of NBA history.
 
-### NBA Historical Analytics — 1996 to 2021
+### Dashboard Preview
+
+#### NBA Historical Analytics - 1996 to 2021
+![NBA Historical Analytics Dashboard](docs/screenshots/NBA%20Historical%20Analytics%20-%201996%20to%202021.png)
+
+#### Top 10 Historical Scorers
+![Top 10 Historical Scorers](docs/screenshots/Top%2010%20Historical%20Scorers.png)
+
+#### Top 10 All-Time Assist Leaders
+![Top 10 All-Time Assist Leaders](docs/screenshots/Top%2010%20All-Time%20Assist%20Leaders.png)
+
+#### Top 10 All-Time Rebound Leaders
+![Top 10 All-Time Rebound Leaders](docs/screenshots/Top%2010%20All-Time%20Rebound%20Leaders.png)
+
+#### Top 10 Fantasy Points Leaders
+![Top 10 Fantasy Points Leaders](docs/screenshots/Top%2010%20Fantasy%20Points%20Leaders.png)
+
+### NBA Historical Analytics - 1996 to 2021
 
 | Dashboard | Insight |
 |---|---|
@@ -223,7 +240,7 @@ nba-data-platform-reconstruction/
 ## 🎓 Academic Origin
 
 > **"Today, sports statistics and analytics are omnipresent and have become a very important factor in decision-making in sports."**  
-> — Original academic paper, ISPGaya 2022
+> - Original academic paper, ISPGaya 2022
 
 **Original project facts:**
 
@@ -233,7 +250,7 @@ nba-data-platform-reconstruction/
 - **Data scraped:** 25 NBA seasons (1996–2021)
 - **Records extracted:** 11,460 player records
 
-The academic project demonstrated genuine end-to-end thinking — from web extraction to statistical analysis. This reconstruction preserves that narrative while elevating the engineering maturity.
+The academic project demonstrated genuine end-to-end thinking - from web extraction to statistical analysis. This reconstruction preserves that narrative while elevating the engineering maturity.
 
 ---
 
@@ -246,7 +263,7 @@ Feedback, suggestions and issues are welcome via [GitHub Issues](https://github.
 
 ## 📄 License
 
-MIT License — see [LICENSE](LICENSE) for details.
+MIT License - see [LICENSE](LICENSE) for details.
 
 ---
 

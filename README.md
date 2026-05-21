@@ -222,7 +222,8 @@ nba-data-platform-reconstruction/
 | Sprint 7 | Advanced SQL analytics and Championship Predictor | ✅ Completed |
 | Sprint 8 | FastAPI REST layer | 📋 Planned |
 | Sprint 9 | CI/CD with GitHub Actions | 📋 Planned |
-| Sprint 10 | Cloud deployment | 📋 Planned |
+| Sprint 10 | Cloud deployment — Render / Fly.io free tier | 📋 Planned |
+| Sprint 11 | Public frontend — HTML/React dashboard | 📋 Planned |
 
 ---
 

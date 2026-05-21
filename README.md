@@ -218,8 +218,8 @@ nba-data-platform-reconstruction/
 | Sprint 3 | Repository setup and legacy asset organization | ✅ Completed |
 | Sprint 4 | Dataset consolidation and PostgreSQL ingestion | ✅ Completed |
 | Sprint 5 | Metabase analytics dashboards | ✅ Completed |
-| Sprint 6 | GitHub polish and professional documentation | 🔄 In Progress |
-| Sprint 7 | Advanced SQL analytics and views | 📋 Planned |
+| Sprint 6 | GitHub polish and professional documentation | ✅ Completed |
+| Sprint 7 | Advanced SQL analytics and Championship Predictor | ✅ Completed |
 | Sprint 8 | FastAPI REST layer | 📋 Planned |
 | Sprint 9 | CI/CD with GitHub Actions | 📋 Planned |
 | Sprint 10 | Cloud deployment | 📋 Planned |
@@ -231,9 +231,9 @@ nba-data-platform-reconstruction/
 | ADR | Decision | Status |
 |---|---|---|
 | [ADR-001](docs/adr/ADR-001-use-postgresql.md) | PostgreSQL as primary database | ✅ Accepted |
-| ADR-002 | Python for ingestion and transformation | 📋 Planned |
-| ADR-003 | Docker for reproducible environments | 📋 Planned |
-| ADR-004 | Metabase for BI and dashboards | 📋 Planned |
+| ADR-002 | Python for ingestion and transformation | ✅ Accepted |
+| ADR-003 | Docker for reproducible environments | ✅ Accepted |
+| ADR-004 | Metabase for BI and dashboards | ✅ Accepted |
 
 ---
 

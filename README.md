@@ -9,6 +9,7 @@
 [![Metabase](https://img.shields.io/badge/Metabase-Analytics-509EE3?style=flat&logo=metabase&logoColor=white)](https://metabase.com)
 [![Pandas](https://img.shields.io/badge/Pandas-2.2+-150458?style=flat&logo=pandas&logoColor=white)](https://pandas.pydata.org)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![CI Pipeline](https://github.com/GuilhermePires21890/nba-data-platform-reconstruction/actions/workflows/ci.yml/badge.svg)](https://github.com/GuilhermePires21890/nba-data-platform-reconstruction/actions/workflows/ci.yml)
 
 ---
 
@@ -220,8 +221,8 @@ nba-data-platform-reconstruction/
 | Sprint 5 | Metabase analytics dashboards | ✅ Completed |
 | Sprint 6 | GitHub polish and professional documentation | ✅ Completed |
 | Sprint 7 | Advanced SQL analytics and Championship Predictor | ✅ Completed |
-| Sprint 8 | FastAPI REST layer | 📋 Planned |
-| Sprint 9 | CI/CD with GitHub Actions | 📋 Planned |
+| Sprint 8 | FastAPI REST layer | ✅ Completed |
+| Sprint 9 | CI/CD with GitHub Actions | ✅ Completed |
 | Sprint 10 | Cloud deployment — Render / Fly.io free tier | 📋 Planned |
 | Sprint 11 | Public frontend — HTML/React dashboard | 📋 Planned |
 

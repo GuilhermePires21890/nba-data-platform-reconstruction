@@ -237,8 +237,8 @@ nba-data-platform-reconstruction/
 | Sprint 7 | Advanced SQL analytics and Championship Predictor | ✅ Completed |
 | Sprint 8 | FastAPI REST layer | ✅ Completed |
 | Sprint 9 | CI/CD with GitHub Actions | ✅ Completed |
-| Sprint 10 | Cloud deployment — Supabase PostgreSQL + Render Web Service | ✅ Completed |
-| Sprint 11 | Public frontend — HTML/React dashboard | 📋 Planned |
+| Sprint 10 | Cloud deployment - Supabase PostgreSQL + Render Web Service | ✅ Completed |
+| Sprint 11 | Public frontend - HTML/React dashboard | 📋 Planned |
 
 ---
 

@@ -123,6 +123,20 @@ Built with **Metabase** on top of **PostgreSQL**, covering 25 seasons of NBA his
 
 ## ⚡ Quick Start
 
+## 🌐 Live API
+
+The NBA Data Platform REST API is publicly available:
+
+| Endpoint | URL |
+|---|---|
+| API Root | https://nba-data-platform-api.onrender.com |
+| Swagger Docs | https://nba-data-platform-api.onrender.com/docs |
+| Top Scorers | https://nba-data-platform-api.onrender.com/players/top-scorers |
+| Seasons | https://nba-data-platform-api.onrender.com/players/seasons |
+| Teams | https://nba-data-platform-api.onrender.com/players/teams |
+
+> Free tier — cold start may take 30-60 seconds after inactivity.
+
 ### Prerequisites
 
 - Docker Desktop

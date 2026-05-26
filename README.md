@@ -123,12 +123,11 @@ Built with **Metabase** on top of **PostgreSQL**, covering 25 seasons of NBA his
 
 ## ⚡ Quick Start
 
-## 🌐 Live API
+## 🌐 Live Platform
 
-The NBA Data Platform REST API is publicly available:
-
-| Endpoint | URL |
+| Service | URL |
 |---|---|
+| **🖥️ Live Dashboard** | **https://nba-data-platform.onrender.com** |
 | API Root | https://nba-data-platform-api.onrender.com |
 | Swagger Docs | https://nba-data-platform-api.onrender.com/docs |
 | Top Scorers | https://nba-data-platform-api.onrender.com/players/top-scorers |

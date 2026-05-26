@@ -1,11 +1,17 @@
-from fastapi import APIRouter, Query, HTTPException
+from fastapi import APIRouter, Query, Request
 from src.api.database import get_connection
+from slowapi import Limiter
+from slowapi.util import get_remote_address
+
+limiter = Limiter(key_func=get_remote_address)
 
 router = APIRouter(prefix="/players", tags=["Players"])
 
 
 @router.get("/")
+@limiter.limit("60/minute")
 def get_players(
+    request: Request,
     season: str = Query(None, description="Filter by season (e.g. Epoca2020-21)"),
     team: str = Query(None, description="Filter by team (e.g. LAL)"),
     limit: int = Query(20, le=100),
@@ -23,7 +29,7 @@ def get_players(
         params.append(team)
 
     query += " ORDER BY pontos DESC"
-    query += f" LIMIT %s OFFSET %s"
+    query += " LIMIT %s OFFSET %s"
     params.extend([limit, offset])
 
     with get_connection() as conn:
@@ -35,7 +41,9 @@ def get_players(
 
 
 @router.get("/top-scorers")
+@limiter.limit("30/minute")
 def get_top_scorers(
+    request: Request,
     season: str = Query(None),
     limit: int = Query(10, le=50),
 ):
@@ -62,7 +70,8 @@ def get_top_scorers(
 
 
 @router.get("/seasons")
-def get_seasons():
+@limiter.limit("30/minute")
+def get_seasons(request: Request):
     query = "SELECT DISTINCT season FROM player_stats ORDER BY season ASC"
 
     with get_connection() as conn:
@@ -74,7 +83,8 @@ def get_seasons():
 
 
 @router.get("/teams")
-def get_teams():
+@limiter.limit("30/minute")
+def get_teams(request: Request):
     query = "SELECT DISTINCT equipa FROM player_stats ORDER BY equipa ASC"
 
     with get_connection() as conn:

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>NBA Data Platform — Historical Analytics 1996–2021</title>
+  <title>NBA Data Platform - Historical Analytics 1996–2021</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@300;400;500&family=Fraunces:ital,wght@0,300;0,700;1,300&display=swap" rel="stylesheet" />
   <style>
@@ -672,7 +672,7 @@
       25 SEASONS<br>
       <span class="line2">OF NBA DATA</span>
     </h1>
-    <p class="hero-sub">From 1996 to 2021 — every stat, every season, every story. Built from an academic scraper, rebuilt as a professional data platform.</p>
+    <p class="hero-sub">From 1996 to 2021 - every stat, every season, every story. Built from an academic scraper, rebuilt as a professional data platform.</p>
     <div class="hero-stats">
       <div class="hero-stat">
         <span class="hero-stat-num">11,460</span>
@@ -848,7 +848,7 @@
         </div>
       `;
     } catch (e) {
-      el.innerHTML = `<div class="error-msg">⚠ Could not load overview. API may be waking up — try again in 30s.</div>`;
+      el.innerHTML = `<div class="error-msg">⚠ Could not load overview. API may be waking up - try again in 30s.</div>`;
     }
   }
 
@@ -916,7 +916,7 @@
             <span class="lb-rank ${rankClass}">${i + 1}</span>
             <div class="lb-player">
               <span class="lb-name">${p.jogador}</span>
-              <span class="lb-team">${p.equipa} · ${p.season ? p.season.replace('Epoca','') : '—'}</span>
+              <span class="lb-team">${p.equipa} · ${p.season ? p.season.replace('Epoca','') : '-'}</span>
               <div class="lb-bar-wrap">
                 <div class="lb-bar" style="width:${barW}%"></div>
               </div>
@@ -925,7 +925,7 @@
             <span class="lb-stat">${(+p.assistencias).toFixed(1)}</span>
             <span class="lb-stat">${(+p.rebotes).toFixed(1)}</span>
             <span class="lb-stat">${(+p.ponto_fantasia).toFixed(1)}</span>
-            <span class="lb-stat" style="font-size:0.9rem; color:var(--muted2)">${p.jogos_jogados || '—'}</span>
+            <span class="lb-stat" style="font-size:0.9rem; color:var(--muted2)">${p.jogos_jogados || '-'}</span>
           </div>
         `;
       }).join('');

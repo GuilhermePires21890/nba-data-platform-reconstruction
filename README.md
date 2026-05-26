@@ -10,6 +10,9 @@
 [![Pandas](https://img.shields.io/badge/Pandas-2.2+-150458?style=flat&logo=pandas&logoColor=white)](https://pandas.pydata.org)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![CI Pipeline](https://github.com/GuilhermePires21890/nba-data-platform-reconstruction/actions/workflows/ci.yml/badge.svg)](https://github.com/GuilhermePires21890/nba-data-platform-reconstruction/actions/workflows/ci.yml)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-009688?style=flat&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
+[![Supabase](https://img.shields.io/badge/Supabase-Cloud-3ECF8E?style=flat&logo=supabase&logoColor=white)](https://supabase.com)
+[![Render](https://img.shields.io/badge/Render-Deploy-46E3B7?style=flat&logo=render&logoColor=white)](https://render.com)
 
 ---
 

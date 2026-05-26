@@ -1,45 +1,4 @@
-name: NBA Data Platform - CI Pipeline
-
-on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
-
-jobs:
-  test:
-    runs-on: ubuntu-latest
-
-    services:
-      postgres:
-        image: postgres:16
-        env:
-          POSTGRES_USER: nba_admin
-          POSTGRES_PASSWORD: nba_password
-          POSTGRES_DB: nba_data_platform
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-
-      - name: Run schema validation tests
+- name: Run transformation and schema tests
         env:
           POSTGRES_HOST: localhost
           POSTGRES_PORT: 5432
@@ -47,7 +6,17 @@ jobs:
           POSTGRES_USER: nba_admin
           POSTGRES_PASSWORD: nba_password
         run: |
-          python -m pytest tests/ -v
+          python -m pytest tests/test_transformation.py tests/test_dataset_schema.py -v
+
+      - name: Run API contract tests
+        env:
+          POSTGRES_HOST: localhost
+          POSTGRES_PORT: 5432
+          POSTGRES_DB: nba_data_platform
+          POSTGRES_USER: nba_admin
+          POSTGRES_PASSWORD: nba_password
+        run: |
+          python -m pytest tests/test_api_contracts.py -v
 
       - name: Validate API startup
         env:

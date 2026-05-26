@@ -1,3 +1,6 @@
+# NOTE: These tests require a live database connection (Supabase).
+# Run locally with: pytest tests/test_data_integrity.py -v
+# Not included in CI pipeline (no production data in CI environment).
 import pytest
 import psycopg2
 from psycopg2.extras import RealDictCursor

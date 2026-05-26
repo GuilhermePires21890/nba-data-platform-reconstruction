@@ -1,0 +1,1049 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NBA Data Platform — Historical Analytics 1996–2021</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@300;400;500&family=Fraunces:ital,wght@0,300;0,700;1,300&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg:        #080a0f;
+      --bg2:       #0e1118;
+      --bg3:       #141720;
+      --border:    rgba(255,255,255,0.07);
+      --accent:    #f97316;
+      --accent2:   #fb923c;
+      --gold:      #fbbf24;
+      --text:      #f1f5f9;
+      --muted:     #64748b;
+      --muted2:    #94a3b8;
+      --success:   #22c55e;
+      --mono:      'DM Mono', monospace;
+      --display:   'Bebas Neue', sans-serif;
+      --serif:     'Fraunces', serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--mono);
+      font-size: 14px;
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    /* ─── NOISE TEXTURE ─── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 9999;
+      opacity: 0.4;
+    }
+
+    /* ─── HEADER ─── */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(8,10,15,0.85);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 2rem;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .logo-ball {
+      width: 28px;
+      height: 28px;
+      background: var(--accent);
+      border-radius: 50%;
+      position: relative;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+
+    .logo-ball::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        45deg,
+        transparent,
+        transparent 4px,
+        rgba(0,0,0,0.4) 4px,
+        rgba(0,0,0,0.4) 5px
+      );
+    }
+
+    .logo-text {
+      font-family: var(--display);
+      font-size: 1.2rem;
+      letter-spacing: 0.05em;
+      color: var(--text);
+    }
+
+    .logo-text span { color: var(--accent); }
+
+    .header-meta {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+    }
+
+    .status-dot {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      color: var(--muted2);
+      font-family: var(--mono);
+    }
+
+    .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--success);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(34,197,94,0.4); }
+      50% { opacity: 0.8; box-shadow: 0 0 0 4px rgba(34,197,94,0); }
+    }
+
+    .api-link {
+      font-size: 11px;
+      color: var(--accent);
+      text-decoration: none;
+      font-family: var(--mono);
+      border: 1px solid var(--accent);
+      padding: 4px 10px;
+      border-radius: 3px;
+      transition: all 0.2s;
+    }
+
+    .api-link:hover {
+      background: var(--accent);
+      color: #000;
+    }
+
+    /* ─── HERO ─── */
+    .hero {
+      min-height: 85vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 6rem 2rem 4rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-bg {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 80% 60% at 60% 40%, rgba(249,115,22,0.06) 0%, transparent 70%),
+        radial-gradient(ellipse 40% 40% at 20% 80%, rgba(251,191,36,0.04) 0%, transparent 60%);
+      pointer-events: none;
+    }
+
+    .hero-eyebrow {
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 0.2em;
+      color: var(--accent);
+      text-transform: uppercase;
+      margin-bottom: 1.5rem;
+      opacity: 0;
+      animation: fadeUp 0.6s 0.1s forwards;
+    }
+
+    .hero-title {
+      font-family: var(--display);
+      font-size: clamp(4rem, 10vw, 9rem);
+      line-height: 0.9;
+      letter-spacing: 0.02em;
+      color: var(--text);
+      margin-bottom: 1rem;
+      opacity: 0;
+      animation: fadeUp 0.6s 0.2s forwards;
+    }
+
+    .hero-title .line2 {
+      color: var(--accent);
+      display: block;
+    }
+
+    .hero-sub {
+      font-family: var(--serif);
+      font-style: italic;
+      font-weight: 300;
+      font-size: clamp(1.1rem, 2.5vw, 1.5rem);
+      color: var(--muted2);
+      max-width: 600px;
+      margin-bottom: 3rem;
+      opacity: 0;
+      animation: fadeUp 0.6s 0.3s forwards;
+    }
+
+    .hero-stats {
+      display: flex;
+      gap: 3rem;
+      flex-wrap: wrap;
+      opacity: 0;
+      animation: fadeUp 0.6s 0.4s forwards;
+    }
+
+    .hero-stat {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .hero-stat-num {
+      font-family: var(--display);
+      font-size: 2.5rem;
+      line-height: 1;
+      color: var(--text);
+    }
+
+    .hero-stat-label {
+      font-size: 10px;
+      letter-spacing: 0.15em;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+
+    .hero-divider {
+      width: 1px;
+      height: 40px;
+      background: var(--border);
+      align-self: center;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ─── SECTION ─── */
+    section {
+      padding: 5rem 2rem;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: baseline;
+      gap: 1rem;
+      margin-bottom: 2.5rem;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 1rem;
+    }
+
+    .section-title {
+      font-family: var(--display);
+      font-size: 2rem;
+      letter-spacing: 0.05em;
+      color: var(--text);
+    }
+
+    .section-tag {
+      font-size: 10px;
+      letter-spacing: 0.15em;
+      color: var(--accent);
+      text-transform: uppercase;
+      background: rgba(249,115,22,0.1);
+      border: 1px solid rgba(249,115,22,0.2);
+      padding: 2px 8px;
+      border-radius: 2px;
+    }
+
+    .section-count {
+      margin-left: auto;
+      font-size: 11px;
+      color: var(--muted);
+      font-family: var(--mono);
+    }
+
+    /* ─── CONTROLS ─── */
+    .controls {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .control-label {
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+
+    select, input {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: var(--mono);
+      font-size: 13px;
+      padding: 8px 12px;
+      border-radius: 4px;
+      outline: none;
+      cursor: pointer;
+      transition: border-color 0.2s;
+      min-width: 160px;
+    }
+
+    select:hover, input:hover,
+    select:focus, input:focus {
+      border-color: var(--accent);
+    }
+
+    .btn {
+      background: var(--accent);
+      color: #000;
+      font-family: var(--display);
+      font-size: 1rem;
+      letter-spacing: 0.08em;
+      padding: 8px 20px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s;
+      align-self: flex-end;
+    }
+
+    .btn:hover { background: var(--accent2); transform: translateY(-1px); }
+    .btn:active { transform: translateY(0); }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--accent);
+      border: 1px solid var(--accent);
+    }
+
+    .btn-ghost:hover {
+      background: rgba(249,115,22,0.1);
+    }
+
+    /* ─── LEADERBOARD ─── */
+    .leaderboard {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .lb-row {
+      display: grid;
+      grid-template-columns: 40px 1fr 80px 80px 80px 80px 80px;
+      align-items: center;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      transition: background 0.15s;
+      opacity: 0;
+      transform: translateX(-10px);
+      animation: slideIn 0.3s forwards;
+    }
+
+    .lb-row:hover { background: var(--bg2); }
+
+    .lb-row.header-row {
+      opacity: 1;
+      transform: none;
+      animation: none;
+      background: var(--bg3);
+      border-radius: 4px 4px 0 0;
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      padding: 10px 16px;
+    }
+
+    @keyframes slideIn {
+      to { opacity: 1; transform: translateX(0); }
+    }
+
+    .lb-rank {
+      font-family: var(--display);
+      font-size: 1.2rem;
+      color: var(--muted);
+    }
+
+    .lb-rank.top1 { color: var(--gold); }
+    .lb-rank.top2 { color: var(--muted2); }
+    .lb-rank.top3 { color: #cd7c3a; }
+
+    .lb-player {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .lb-name {
+      font-weight: 500;
+      color: var(--text);
+      font-size: 13px;
+    }
+
+    .lb-team {
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+    }
+
+    .lb-stat {
+      font-family: var(--display);
+      font-size: 1.2rem;
+      text-align: right;
+      color: var(--text);
+    }
+
+    .lb-stat.highlight { color: var(--accent); }
+
+    .lb-bar-wrap {
+      grid-column: 1 / -1;
+      height: 2px;
+      background: var(--bg3);
+      margin-top: 4px;
+      border-radius: 1px;
+      overflow: hidden;
+    }
+
+    .lb-bar {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), var(--gold));
+      border-radius: 1px;
+      transition: width 0.8s cubic-bezier(0.16,1,0.3,1);
+    }
+
+    /* ─── TREND CHART ─── */
+    .chart-container {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 2rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .chart-container::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--accent), var(--gold), transparent);
+    }
+
+    .chart-title {
+      font-family: var(--display);
+      font-size: 1.3rem;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.5rem;
+    }
+
+    .chart-subtitle {
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 2rem;
+    }
+
+    canvas {
+      width: 100% !important;
+      max-height: 300px;
+    }
+
+    /* ─── CARDS GRID ─── */
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .stat-card {
+      background: var(--bg2);
+      padding: 1.5rem;
+      transition: background 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .stat-card:hover { background: var(--bg3); }
+
+    .stat-card::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--accent), transparent);
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .stat-card:hover::after { opacity: 1; }
+
+    .card-label {
+      font-size: 10px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 0.75rem;
+    }
+
+    .card-value {
+      font-family: var(--display);
+      font-size: 2.5rem;
+      line-height: 1;
+      color: var(--text);
+      margin-bottom: 0.25rem;
+    }
+
+    .card-sub {
+      font-size: 12px;
+      color: var(--muted2);
+    }
+
+    .card-accent { color: var(--accent); }
+
+    /* ─── LOADING ─── */
+    .loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 3rem;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .spinner {
+      width: 16px;
+      height: 16px;
+      border: 2px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .error-msg {
+      color: #ef4444;
+      font-size: 12px;
+      padding: 1rem;
+      background: rgba(239,68,68,0.05);
+      border: 1px solid rgba(239,68,68,0.2);
+      border-radius: 4px;
+    }
+
+    /* ─── FOOTER ─── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 3rem 2rem;
+      max-width: 1400px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 2rem;
+    }
+
+    .footer-col-title {
+      font-family: var(--display);
+      font-size: 1rem;
+      letter-spacing: 0.08em;
+      color: var(--text);
+      margin-bottom: 1rem;
+    }
+
+    .footer-links {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .footer-links a {
+      font-size: 12px;
+      color: var(--muted);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    .footer-links a:hover { color: var(--accent); }
+
+    .footer-bottom {
+      border-top: 1px solid var(--border);
+      padding: 1.5rem 2rem;
+      max-width: 1400px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .tech-stack {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    .tech-badge {
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      color: var(--muted2);
+      border: 1px solid var(--border);
+      padding: 2px 8px;
+      border-radius: 2px;
+    }
+
+    /* ─── SCROLLBAR ─── */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+
+    /* ─── RESPONSIVE ─── */
+    @media (max-width: 768px) {
+      .hero-title { font-size: 4rem; }
+      .hero-stats { gap: 1.5rem; }
+      .hero-divider { display: none; }
+      .lb-row { grid-template-columns: 32px 1fr 70px 70px; }
+      .lb-row > *:nth-child(n+5) { display: none; }
+      footer { grid-template-columns: 1fr; }
+      .footer-bottom { flex-direction: column; gap: 1rem; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="logo">
+    <div class="logo-ball"></div>
+    <span class="logo-text">NBA <span>DATA</span> PLATFORM</span>
+  </div>
+  <div class="header-meta">
+    <div class="status-dot">
+      <div class="dot"></div>
+      API LIVE
+    </div>
+    <a href="https://nba-data-platform-api.onrender.com/docs" target="_blank" class="api-link">API DOCS →</a>
+  </div>
+</header>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-bg"></div>
+  <div style="max-width:1400px; margin:0 auto; width:100%">
+    <p class="hero-eyebrow">Historical Sports Analytics Platform</p>
+    <h1 class="hero-title">
+      25 SEASONS<br>
+      <span class="line2">OF NBA DATA</span>
+    </h1>
+    <p class="hero-sub">From 1996 to 2021 — every stat, every season, every story. Built from an academic scraper, rebuilt as a professional data platform.</p>
+    <div class="hero-stats">
+      <div class="hero-stat">
+        <span class="hero-stat-num">11,460</span>
+        <span class="hero-stat-label">Player Records</span>
+      </div>
+      <div class="hero-divider"></div>
+      <div class="hero-stat">
+        <span class="hero-stat-num">25</span>
+        <span class="hero-stat-label">Seasons</span>
+      </div>
+      <div class="hero-divider"></div>
+      <div class="hero-stat">
+        <span class="hero-stat-num">332K</span>
+        <span class="hero-stat-label">Data Fields</span>
+      </div>
+      <div class="hero-divider"></div>
+      <div class="hero-stat">
+        <span class="hero-stat-num">30</span>
+        <span class="hero-stat-label">Stats per Record</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PLATFORM STATS -->
+<section>
+  <div class="section-header">
+    <h2 class="section-title">PLATFORM OVERVIEW</h2>
+    <span class="section-tag">Live Data</span>
+  </div>
+  <div class="cards-grid" id="overview-cards">
+    <div class="loading"><div class="spinner"></div> Loading platform data...</div>
+  </div>
+</section>
+
+<!-- TOP SCORERS -->
+<section>
+  <div class="section-header">
+    <h2 class="section-title">SCORING LEADERS</h2>
+    <span class="section-tag">All-Time</span>
+    <span class="section-count" id="scorers-count"></span>
+  </div>
+
+  <div class="controls">
+    <div class="control-group">
+      <span class="control-label">Season</span>
+      <select id="season-filter">
+        <option value="">All Seasons</option>
+      </select>
+    </div>
+    <div class="control-group">
+      <span class="control-label">Team</span>
+      <select id="team-filter">
+        <option value="">All Teams</option>
+      </select>
+    </div>
+    <div class="control-group">
+      <span class="control-label">Show</span>
+      <select id="limit-filter">
+        <option value="10">Top 10</option>
+        <option value="25">Top 25</option>
+        <option value="50">Top 50</option>
+      </select>
+    </div>
+    <button class="btn" onclick="loadTopScorers()">APPLY</button>
+  </div>
+
+  <div id="leaderboard-container">
+    <div class="loading"><div class="spinner"></div> Loading leaders...</div>
+  </div>
+</section>
+
+<!-- 3PT REVOLUTION CHART -->
+<section>
+  <div class="section-header">
+    <h2 class="section-title">3-POINT REVOLUTION</h2>
+    <span class="section-tag">Trend Analysis</span>
+  </div>
+  <div class="chart-container">
+    <p class="chart-title">Average 3-Pointers Made Per Player</p>
+    <p class="chart-subtitle">1996–97 to 2020–21 · minimum 20 games played · the Steph Curry era is visible</p>
+    <canvas id="trendChart"></canvas>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div>
+    <p class="footer-col-title">NBA DATA PLATFORM</p>
+    <p style="font-size:12px; color:var(--muted); line-height:1.8">
+      Originally built as an academic project at ISPGaya (Porto, 2022). Rebuilt as a professional Data Engineering platform demonstrating modern analytics architecture.
+    </p>
+  </div>
+  <div>
+    <p class="footer-col-title">LINKS</p>
+    <div class="footer-links">
+      <a href="https://nba-data-platform-api.onrender.com/docs" target="_blank">API Documentation →</a>
+      <a href="https://github.com/GuilhermePires21890/nba-data-platform-reconstruction" target="_blank">GitHub Repository →</a>
+      <a href="https://nba-data-platform-api.onrender.com/players/seasons" target="_blank">Seasons Endpoint →</a>
+      <a href="https://nba-data-platform-api.onrender.com/players/top-scorers" target="_blank">Top Scorers Endpoint →</a>
+    </div>
+  </div>
+  <div>
+    <p class="footer-col-title">STACK</p>
+    <div class="tech-stack">
+      <span class="tech-badge">Python</span>
+      <span class="tech-badge">FastAPI</span>
+      <span class="tech-badge">PostgreSQL</span>
+      <span class="tech-badge">Supabase</span>
+      <span class="tech-badge">Render</span>
+      <span class="tech-badge">Docker</span>
+      <span class="tech-badge">Metabase</span>
+      <span class="tech-badge">GitHub Actions</span>
+    </div>
+  </div>
+</footer>
+
+<div class="footer-bottom">
+  <span>Built in Porto, Portugal 🇵🇹 · Guilherme Pires · 2022 → 2026</span>
+  <span style="color:var(--accent)">Academic origin · Professional reconstruction · Engineering evolution</span>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+  const API = 'https://nba-data-platform-api.onrender.com';
+
+  // ─── FETCH HELPERS ───
+  async function apiFetch(path) {
+    const res = await fetch(API + path);
+    if (!res.ok) throw new Error(`API error: ${res.status}`);
+    return res.json();
+  }
+
+  // ─── OVERVIEW CARDS ───
+  async function loadOverview() {
+    const el = document.getElementById('overview-cards');
+    try {
+      const [seasons, teams] = await Promise.all([
+        apiFetch('/players/seasons'),
+        apiFetch('/players/teams')
+      ]);
+
+      el.innerHTML = `
+        <div class="stat-card">
+          <p class="card-label">Total Seasons</p>
+          <p class="card-value">${seasons.seasons.length}</p>
+          <p class="card-sub">1996–97 → 2020–21</p>
+        </div>
+        <div class="stat-card">
+          <p class="card-label">Total Teams</p>
+          <p class="card-value">${teams.teams.length}</p>
+          <p class="card-sub">Active & historical franchises</p>
+        </div>
+        <div class="stat-card">
+          <p class="card-label">Player Records</p>
+          <p class="card-value card-accent">11,460</p>
+          <p class="card-sub">Unique player-season entries</p>
+        </div>
+        <div class="stat-card">
+          <p class="card-label">Data Fields</p>
+          <p class="card-value">332K</p>
+          <p class="card-sub">30 stats × 11,460 records</p>
+        </div>
+        <div class="stat-card">
+          <p class="card-label">API Status</p>
+          <p class="card-value" style="color:var(--success); font-size:1.8rem">LIVE</p>
+          <p class="card-sub">Powered by FastAPI + Supabase</p>
+        </div>
+        <div class="stat-card">
+          <p class="card-label">Championship Model</p>
+          <p class="card-value">16%</p>
+          <p class="card-sub">Exact accuracy · 16× better than random</p>
+        </div>
+      `;
+    } catch (e) {
+      el.innerHTML = `<div class="error-msg">⚠ Could not load overview. API may be waking up — try again in 30s.</div>`;
+    }
+  }
+
+  // ─── LOAD FILTERS ───
+  async function loadFilters() {
+    try {
+      const [seasons, teams] = await Promise.all([
+        apiFetch('/players/seasons'),
+        apiFetch('/players/teams')
+      ]);
+
+      const seasonSel = document.getElementById('season-filter');
+      seasons.seasons.forEach(s => {
+        const opt = document.createElement('option');
+        opt.value = s;
+        opt.textContent = s.replace('Epoca', '');
+        seasonSel.appendChild(opt);
+      });
+
+      const teamSel = document.getElementById('team-filter');
+      teams.teams.forEach(t => {
+        const opt = document.createElement('option');
+        opt.value = t;
+        opt.textContent = t;
+        teamSel.appendChild(opt);
+      });
+    } catch (e) {}
+  }
+
+  // ─── TOP SCORERS ───
+  async function loadTopScorers() {
+    const container = document.getElementById('leaderboard-container');
+    const countEl   = document.getElementById('scorers-count');
+    const season    = document.getElementById('season-filter').value;
+    const team      = document.getElementById('team-filter').value;
+    const limit     = document.getElementById('limit-filter').value;
+
+    container.innerHTML = `<div class="loading"><div class="spinner"></div> Loading...</div>`;
+
+    try {
+      let url = `/players/top-scorers?limit=${limit}`;
+      if (season) url += `&season=${encodeURIComponent(season)}`;
+
+      const data = await apiFetch(url);
+      let players = data.data;
+
+      if (team) players = players.filter(p => p.equipa === team);
+
+      countEl.textContent = `${players.length} players`;
+
+      if (!players.length) {
+        container.innerHTML = `<div class="loading">No data found for selected filters.</div>`;
+        return;
+      }
+
+      const maxPts = Math.max(...players.map(p => +p.pontos));
+
+      const rows = players.map((p, i) => {
+        const rankClass = i === 0 ? 'top1' : i === 1 ? 'top2' : i === 2 ? 'top3' : '';
+        const barW = ((+p.pontos / maxPts) * 100).toFixed(1);
+        const delay = (i * 0.04).toFixed(2);
+
+        return `
+          <div class="lb-row" style="animation-delay:${delay}s">
+            <span class="lb-rank ${rankClass}">${i + 1}</span>
+            <div class="lb-player">
+              <span class="lb-name">${p.jogador}</span>
+              <span class="lb-team">${p.equipa} · ${p.season ? p.season.replace('Epoca','') : '—'}</span>
+              <div class="lb-bar-wrap">
+                <div class="lb-bar" style="width:${barW}%"></div>
+              </div>
+            </div>
+            <span class="lb-stat highlight">${(+p.pontos).toFixed(1)}</span>
+            <span class="lb-stat">${(+p.assistencias).toFixed(1)}</span>
+            <span class="lb-stat">${(+p.rebotes).toFixed(1)}</span>
+            <span class="lb-stat">${(+p.ponto_fantasia).toFixed(1)}</span>
+            <span class="lb-stat" style="font-size:0.9rem; color:var(--muted2)">${p.jogos_jogados || '—'}</span>
+          </div>
+        `;
+      }).join('');
+
+      container.innerHTML = `
+        <div class="leaderboard">
+          <div class="lb-row header-row">
+            <span>#</span>
+            <span>Player</span>
+            <span style="text-align:right">PTS</span>
+            <span style="text-align:right">AST</span>
+            <span style="text-align:right">REB</span>
+            <span style="text-align:right">FAN</span>
+            <span style="text-align:right">GP</span>
+          </div>
+          ${rows}
+        </div>
+      `;
+    } catch (e) {
+      container.innerHTML = `<div class="error-msg">⚠ API may be waking up. Please wait 30–60 seconds and try again.</div>`;
+    }
+  }
+
+  // ─── 3PT REVOLUTION CHART ───
+  async function loadTrendChart() {
+    try {
+      const data = await apiFetch('/players/seasons');
+      const seasons = data.seasons;
+
+      // Hardcoded trend data from our SQL analysis
+      const trendData = {
+        'Epoca1996-97': 0.56, 'Epoca1997-98': 0.41, 'Epoca1998-99': 0.43,
+        'Epoca1999-00': 0.44, 'Epoca2000-01': 0.44, 'Epoca2001-02': 0.47,
+        'Epoca2002-03': 0.47, 'Epoca2003-04': 0.49, 'Epoca2004-05': 0.52,
+        'Epoca2005-06': 0.51, 'Epoca2006-07': 0.56, 'Epoca2007-08': 0.59,
+        'Epoca2008-09': 0.62, 'Epoca2009-10': 0.60, 'Epoca2010-11': 0.59,
+        'Epoca2011-12': 0.59, 'Epoca2012-13': 0.65, 'Epoca2013-14': 0.68,
+        'Epoca2014-15': 0.72, 'Epoca2015-16': 0.75, 'Epoca2016-17': 0.86,
+        'Epoca2017-18': 0.95, 'Epoca2018-19': 1.01, 'Epoca2019-20': 1.11,
+        'Epoca2020-21': 1.15
+      };
+
+      const labels = Object.keys(trendData).map(s => s.replace('Epoca',''));
+      const values = Object.values(trendData);
+
+      const ctx = document.getElementById('trendChart').getContext('2d');
+
+      new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [{
+            label: 'Avg 3PM per Player',
+            data: values,
+            borderColor: '#f97316',
+            backgroundColor: 'rgba(249,115,22,0.06)',
+            borderWidth: 2,
+            pointBackgroundColor: values.map(v => v >= 1.0 ? '#fbbf24' : '#f97316'),
+            pointRadius: values.map(v => v >= 1.0 ? 6 : 3),
+            pointHoverRadius: 8,
+            fill: true,
+            tension: 0.4,
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: true,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: '#0e1118',
+              borderColor: 'rgba(255,255,255,0.1)',
+              borderWidth: 1,
+              titleColor: '#f97316',
+              bodyColor: '#f1f5f9',
+              callbacks: {
+                label: ctx => ` ${ctx.parsed.y.toFixed(2)} 3PM avg`,
+                afterLabel: ctx => ctx.parsed.y >= 1.0 ? ' ★ Post-Curry era' : ''
+              }
+            },
+            annotation: {}
+          },
+          scales: {
+            x: {
+              grid: { color: 'rgba(255,255,255,0.04)' },
+              ticks: {
+                color: '#64748b',
+                font: { family: 'DM Mono', size: 10 },
+                maxRotation: 45
+              }
+            },
+            y: {
+              grid: { color: 'rgba(255,255,255,0.04)' },
+              ticks: {
+                color: '#64748b',
+                font: { family: 'DM Mono', size: 11 },
+                callback: v => v.toFixed(2)
+              },
+              min: 0.3,
+            }
+          }
+        }
+      });
+    } catch (e) {
+      document.getElementById('trendChart').parentElement.innerHTML +=
+        `<div class="error-msg">⚠ Chart data unavailable.</div>`;
+    }
+  }
+
+  // ─── INIT ───
+  (async () => {
+    await Promise.all([
+      loadOverview(),
+      loadFilters(),
+      loadTopScorers(),
+      loadTrendChart()
+    ]);
+  })();
+</script>
+</body>
+</html>

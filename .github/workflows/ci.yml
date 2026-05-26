@@ -1,4 +1,4 @@
-name: NBA Data Platform — CI Pipeline
+name: NBA Data Platform - CI Pipeline
 
 on:
   push:

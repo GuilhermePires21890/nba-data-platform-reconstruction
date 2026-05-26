@@ -1,12 +1,12 @@
 -- ============================================================
 -- NBA Data Platform Reconstruction
 -- Advanced Analytics SQL Layer
--- Sprint 7 — SQL Analytics
+-- Sprint 7 - SQL Analytics
 -- ============================================================
 
 
 -- ============================================================
--- QUERY 1 — Offensive Efficiency Index
+-- QUERY 1 - Offensive Efficiency Index
 -- Players with best scoring efficiency (points per minute)
 -- Minimum 50 games and 10 minutes per game filter
 -- ============================================================
@@ -30,7 +30,7 @@ LIMIT 25;
 
 
 -- ============================================================
--- QUERY 2 — Triple-Double Dominance by Era
+-- QUERY 2 - Triple-Double Dominance by Era
 -- Which era produced the most triple-doubles?
 -- Groups seasons into historical eras
 -- ============================================================
@@ -54,7 +54,7 @@ ORDER BY total_triple_doubles DESC;
 
 
 -- ============================================================
--- QUERY 3 — All-Time Player Consistency Score
+-- QUERY 3 - All-Time Player Consistency Score
 -- Players who maintained high performance across multiple seasons
 -- Consistency = seasons above their own career average
 -- ============================================================
@@ -90,7 +90,7 @@ LIMIT 20;
 
 
 -- ============================================================
--- QUERY 4 — 3-Point Revolution Analysis
+-- QUERY 4 - 3-Point Revolution Analysis
 -- Evolution of 3-point shooting across 25 seasons
 -- Shows the shift in NBA playing style over time
 -- ============================================================
@@ -112,7 +112,7 @@ ORDER BY season ASC;
 
 
 -- ============================================================
--- QUERY 5 — Win Correlation Analysis
+-- QUERY 5 - Win Correlation Analysis
 -- Which individual stats correlate most with team wins?
 -- Aggregates player contributions by team and season
 -- ============================================================
@@ -137,7 +137,7 @@ LIMIT 30;
 
 
 -- ============================================================
--- QUERY 6 — Young Stars Identification
+-- QUERY 6 - Young Stars Identification
 -- Best performing players under 25 years old
 -- Identifies breakout seasons by young talent
 -- ============================================================

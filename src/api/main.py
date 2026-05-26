@@ -25,7 +25,7 @@ def root():
         "name": "NBA Data Platform API",
         "version": "1.0.0",
         "docs": "/docs",
-        "seasons": "25 seasons — 1996 to 2021",
+        "seasons": "25 seasons - 1996 to 2021",
         "records": 11460,
     }
 

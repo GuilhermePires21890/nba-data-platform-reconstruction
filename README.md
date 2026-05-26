@@ -75,14 +75,18 @@ flowchart TD
 
 ## 🚀 Tech Stack
 
-| Layer | Technology | Purpose |
+|| Layer | Technology | Purpose |
 |---|---|---|
 | Ingestion | Python + Pandas | Data extraction and consolidation |
 | Storage | PostgreSQL 16 | Relational analytical database |
 | Runtime | Docker Compose | Reproducible local environment |
 | BI & Dashboards | Metabase | Interactive analytics and visualization |
 | Analytics | SQL | Aggregations, rankings, historical analysis |
-| Notebooks | Jupyter | Exploratory data analysis |
+| REST API | FastAPI | Public API layer with Swagger docs |
+| Cloud DB | Supabase | Managed PostgreSQL cloud hosting |
+| Cloud Deploy | Render | Web service + static site hosting |
+| CI/CD | GitHub Actions | Automated testing pipeline |
+| Frontend | HTML + Chart.js | Public analytics dashboard |
 | Documentation | Markdown + Mermaid | Architecture and data dictionary |
 
 ---
@@ -121,8 +125,6 @@ Built with **Metabase** on top of **PostgreSQL**, covering 25 seasons of NBA his
 
 ---
 
-## ⚡ Quick Start
-
 ## 🌐 Live Platform
 
 | Service | URL |
@@ -135,6 +137,12 @@ Built with **Metabase** on top of **PostgreSQL**, covering 25 seasons of NBA his
 | Teams | https://nba-data-platform-api.onrender.com/players/teams |
 
 > Free tier — cold start may take 30-60 seconds after inactivity.
+
+---
+
+## ⚡ Quick Start
+
+---
 
 ### Prerequisites
 
@@ -237,7 +245,7 @@ nba-data-platform-reconstruction/
 | Sprint 8 | FastAPI REST layer | ✅ Completed |
 | Sprint 9 | CI/CD with GitHub Actions | ✅ Completed |
 | Sprint 10 | Cloud deployment - Supabase PostgreSQL + Render Web Service | ✅ Completed |
-| Sprint 11 | Public frontend - HTML/React dashboard | 📋 Planned |
+| Sprint 11 | Public frontend - live dashboard at nba-data-platform.onrender.com | ✅ Completed |
 
 ---
 

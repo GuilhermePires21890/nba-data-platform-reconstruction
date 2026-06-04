@@ -297,3 +297,4 @@ MIT License - see [LICENSE](LICENSE) for details.
   <strong>Built in Porto, Portugal 🇵🇹</strong><br/>
   Academic origin · Professional reconstruction · Engineering evolution
 </p>
+

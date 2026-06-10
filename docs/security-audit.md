@@ -1,103 +1,165 @@
-## Test Results
+# Security Audit
+
+## Scope
+
+This document records the security baseline and the implementation status of mitigations for the public NBA Data Platform API.
+
+The platform serves public, read-only sports analytics data and does not process authentication data, payment data or personally identifiable information.
+
+---
+
+## Baseline Test Results
 
 ### TEST-001 - SQL Injection
-**Vector:** Query parameter injection via season filter
+
+**Vector:** Query parameter injection via season filter  
 **Test:**
+
 ```bash
 curl "https://nba-data-platform-api.onrender.com/players/?season='; DROP TABLE player_stats;--"
 ```
-**Result:** PASS
-**HTTP Response:** 403 Forbidden
-**Notes:** Blocked by Cloudflare WAF before reaching the application layer. psycopg2 parameterised queries provide additional defence-in-depth at application level.
+
+**Baseline result:** PASS  
+**HTTP response:** 403 Forbidden  
+**Notes:** Blocked by Cloudflare before reaching the application layer. Parameterized `psycopg2` queries provide application-level defence-in-depth.
 
 ---
 
 ### TEST-002 - Rate Limiting
-**Vector:** High-volume requests from single client
-**Test:**
+
+**Vector:** High-volume requests from a single client  
+**Baseline test:**
+
 ```bash
 for i in {1..20}; do curl -s -o /dev/null -w "%{http_code} " \
 https://nba-data-platform-api.onrender.com/health; done
 ```
-**Result:** FAIL
-**HTTP Response:** 200 on all 20 consecutive requests
-**Notes:** No rate limiting implemented at application level. Cloudflare provides basic DDoS protection but no per-client request throttling. Mitigation planned via slowapi.
+
+**Baseline result:** FAIL  
+**Baseline response:** 200 on all 20 consecutive requests  
+**Mitigation implemented:** `slowapi` middleware with default and endpoint-specific limits of 30-60 requests per minute.  
+**Current status:** Implemented - pending repeatable post-deployment regression evidence
 
 ---
 
 ### TEST-003 - Security Headers
-**Vector:** Missing HTTP security headers
-**Test:**
+
+**Vector:** Missing HTTP security headers  
+**Baseline test:**
+
 ```bash
 curl -I https://nba-data-platform-api.onrender.com/
 ```
-**Result:** PARTIAL
-**Headers present:** server: cloudflare, x-render-origin-server: uvicorn
-**Headers missing:** X-Content-Type-Options, X-Frame-Options, Content-Security-Policy, Strict-Transport-Security
-**Notes:** Cloudflare provides transport security. Application-level security headers not configured. Mitigation planned via FastAPI middleware.
+
+**Baseline result:** PARTIAL  
+**Baseline observation:** Application-level security headers were missing.  
+**Mitigation implemented:** FastAPI middleware now adds:
+
+- `X-Content-Type-Options`
+- `X-Frame-Options`
+- `X-XSS-Protection`
+- `Strict-Transport-Security`
+- `Referrer-Policy`
+- `Permissions-Policy`
+
+**Current status:** Implemented - pending repeatable post-deployment regression evidence
 
 ---
 
 ### TEST-004 - CORS Policy
-**Vector:** Cross-origin request from unauthorised domain
-**Test:**
+
+**Vector:** Cross-origin request from an unauthorized domain  
+**Baseline test:**
+
 ```bash
 curl -H "Origin: https://malicious-site.com" \
      -I https://nba-data-platform-api.onrender.com/players/seasons
 ```
-**Result:** FAIL
-**Response:** access-control-allow-origin: *
-**Notes:** Any domain can consume the API. Acceptable for a public read-only dataset but should be restricted to known origins as best practice. Mitigation planned.
+
+**Baseline result:** FAIL  
+**Baseline response:** `access-control-allow-origin: *`  
+**Mitigation implemented:** CORS restricted to the public frontend and approved local development origins. Allowed methods are restricted to `GET`.  
+**Current status:** Implemented - pending repeatable post-deployment regression evidence
 
 ---
 
 ### TEST-005 - Oversized Request
-**Vector:** Abnormal limit parameter
+
+**Vector:** Abnormal limit parameter  
 **Test:**
+
 ```bash
 curl "https://nba-data-platform-api.onrender.com/players/?limit=99999"
 ```
-**Result:** PASS
-**HTTP Response:** 422 Unprocessable Entity
-**Notes:** FastAPI Pydantic validation correctly rejects values above 100. Input should be less than or equal to 100. No application-level abuse possible via this vector.
+
+**Result:** PASS  
+**HTTP response:** 422 Unprocessable Entity  
+**Notes:** FastAPI/Pydantic validation rejects values above the endpoint maximum.
 
 ---
 
 ### TEST-006 - Path Traversal
-**Vector:** Malformed endpoint paths
+
+**Vector:** Malformed endpoint paths  
 **Test:**
+
 ```bash
 curl "https://nba-data-platform-api.onrender.com/../../etc/passwd"
 ```
-**Result:** PASS
-**HTTP Response:** 404 Not Found
-**Notes:** Path traversal attempts correctly rejected. No filesystem exposure detected.
+
+**Result:** PASS  
+**HTTP response:** 404 Not Found  
+**Notes:** Invalid routes are rejected and no filesystem operations are exposed by the API.
 
 ---
 
-## Risk Register - Updated
+## Risk Register - Current Status
 
-| Risk ID | Description | Severity | Test | Status |
+| Risk ID | Description | Severity | Control | Status |
 |---|---|---|---|---|
-| RISK-001 | No rate limiting | Medium | TEST-002 | Open |
-| RISK-002 | Permissive CORS | Medium | TEST-004 | Open |
-| RISK-003 | Supabase RLS disabled | Medium | - | Open |
-| RISK-004 | Missing security headers | Low | TEST-003 | Open |
-| RISK-005 | SQL injection surface | Low | TEST-001 | Mitigated - Cloudflare + psycopg2 |
-| RISK-006 | Path traversal | Low | TEST-006 | Mitigated |
-| RISK-007 | Oversized requests | Low | TEST-005 | Mitigated - Pydantic validation |
+| RISK-001 | Unrestricted request volume | Medium | `slowapi` rate limiting | Implemented |
+| RISK-002 | Permissive CORS | Medium | Known origins and GET-only methods | Implemented |
+| RISK-003 | Supabase RLS posture not formally validated | Medium | Validate exposure and apply read-only RLS where applicable | Open |
+| RISK-004 | Missing application security headers | Low | FastAPI security-header middleware | Implemented |
+| RISK-005 | SQL injection surface | Low | Cloudflare, Pydantic and parameterized queries | Mitigated |
+| RISK-006 | Path traversal | Low | FastAPI route isolation | Mitigated |
+| RISK-007 | Oversized requests | Low | Pydantic query limits | Mitigated |
 
 ---
 
 ## Audit Summary
 
-| Category | Result |
+| Category | Status |
 |---|---|
-| Tests executed | 6 |
-| PASS | 3 (TEST-001, TEST-005, TEST-006) |
-| FAIL | 2 (TEST-002, TEST-004) |
-| PARTIAL | 1 (TEST-003) |
+| Baseline tests executed | 6 |
 | Critical vulnerabilities | 0 |
-| Open risks | 4 |
+| Application mitigations implemented | Rate limiting, restricted CORS and security headers |
+| Remaining open risk | Supabase RLS posture validation |
+| Regression evidence | Post-deployment retest recommended |
 
-**Overall assessment:** The platform is safe for public read-only use. No critical vulnerabilities detected. SQL injection and path traversal are mitigated. Open risks are medium/low severity and do not expose sensitive data. Mitigations are planned and documented.
+**Overall assessment:** The platform is suitable for public read-only portfolio use. No critical vulnerabilities were identified. The main baseline gaps were addressed in application code. A repeatable post-deployment security regression run should be added to provide evidence that the controls remain active in the deployed environment.
+
+---
+
+## Recommended Regression Commands
+
+```bash
+# Security headers
+curl -I https://nba-data-platform-api.onrender.com/
+
+# Unauthorized origin
+curl -H "Origin: https://malicious-site.com" \
+     -I https://nba-data-platform-api.onrender.com/players/seasons
+
+# Rate limiting
+for i in {1..70}; do
+  curl -s -o /dev/null -w "%{http_code} " \
+  https://nba-data-platform-api.onrender.com/players/seasons
+done
+```
+
+Expected outcomes:
+
+- Security headers are present in the API response
+- Unauthorized origins do not receive an `Access-Control-Allow-Origin` response for their domain
+- Requests above the configured threshold begin returning HTTP 429

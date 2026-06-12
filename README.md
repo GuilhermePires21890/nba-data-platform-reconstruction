@@ -21,11 +21,10 @@
 | Area | Status |
 |---|---|
 | Portfolio-ready MVP | ✅ Completed |
-| Sprints 1-12 | ✅ Completed |
-| Sprint 13 - API Analytics Endpoints | 📋 Planned |
-| Sprint 14 - Enterprise QA/SPEC Documentation | 📋 Planned |
+| Sprints 1-14 | ✅ Completed |
 | Public dashboard and API | 🟢 Live |
 | CI pipeline | 🟢 Active on `main` |
+| QA Spec Suite | 🟢 7 SPECs, 78 scenarios |
 
 ---
 
@@ -344,7 +343,7 @@ nba-data-platform-reconstruction/
 | Sprint 11 | Public frontend and live API integration | ✅ Completed |
 | Sprint 12 | ADR completion, QA/security documentation and auto-deploy validation | ✅ Completed |
 | Sprint 13 | API Analytics Endpoints - championship-predictor, era-analysis, 3point-revolution, young-stars, player-career | ✅ Completed |
-| Sprint 14 | Super SPEC + QA Expert documentation - Gherkin/BDD | 📋 Planned |
+| Sprint 14 | Super SPEC + QA Expert documentation - Gherkin/BDD - 7 SPECs, 78 scenarios | ✅ Completed |
 
 ### Planned Sprint 13 endpoints
 

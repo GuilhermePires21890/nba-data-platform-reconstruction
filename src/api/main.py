@@ -4,14 +4,14 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
-from src.api.routers import players
+from src.api.routers import players, analytics
 
 
-# ─── Rate Limiter ───
+# --- Rate Limiter ---
 limiter = Limiter(key_func=get_remote_address, default_limits=["60/minute"])
 
 
-# ─── Security Headers ───
+# --- Security Headers ---
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         response: Response = await call_next(request)
@@ -24,7 +24,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         return response
 
 
-# ─── App ───
+# --- App ---
 app = FastAPI(
     title="NBA Data Platform API",
     description="REST API for historical NBA player statistics - 1996 to 2021",
@@ -47,6 +47,7 @@ app.add_middleware(
 )
 
 app.include_router(players.router)
+app.include_router(analytics.router)
 
 
 @app.get("/")

@@ -3,12 +3,19 @@ import httpx
 import time
 
 BASE_URL = "https://nba-data-platform-api.onrender.com"
-TIMEOUT = 60.0
+TIMEOUT = 90.0
 
 
 @pytest.fixture(scope="session")
 def client():
     with httpx.Client(base_url=BASE_URL, timeout=TIMEOUT) as c:
+        # Warm up - acordar a API antes de correr os testes
+        for _ in range(3):
+            try:
+                c.get("/health")
+                break
+            except Exception:
+                time.sleep(10)
         yield c
 
 
@@ -84,6 +91,7 @@ class TestTopScorersEndpoint:
         assert r.json()["count"] == 10
 
     def test_top_scorers_custom_limit(self, client):
+        time.sleep(2)
         r = client.get("/players/top-scorers?limit=25")
         assert r.json()["count"] == 25
 

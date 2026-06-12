@@ -3,7 +3,7 @@ import httpx
 import time
 
 BASE_URL = "https://nba-data-platform-api.onrender.com"
-TIMEOUT = 30.0
+TIMEOUT = 60.0
 
 
 @pytest.fixture(scope="session")

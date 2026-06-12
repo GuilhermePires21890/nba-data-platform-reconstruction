@@ -174,6 +174,11 @@ These results are presented as model evaluation metrics. No unsupported comparis
 | Top Scorers | https://nba-data-platform-api.onrender.com/players/top-scorers |
 | Seasons | https://nba-data-platform-api.onrender.com/players/seasons |
 | Teams | https://nba-data-platform-api.onrender.com/players/teams |
+| Analytics - Era Analysis | https://nba-data-platform-api.onrender.com/analytics/era-analysis |
+| Analytics - Championship Predictor | https://nba-data-platform-api.onrender.com/analytics/championship-predictor |
+| Analytics - 3-Point Revolution | https://nba-data-platform-api.onrender.com/analytics/3point-revolution |
+| Analytics - Young Stars | https://nba-data-platform-api.onrender.com/analytics/young-stars |
+| Player Career | https://nba-data-platform-api.onrender.com/analytics/players/{name}/career |
 
 > Free tier - cold start may take 30-60 seconds after inactivity.
 
@@ -338,8 +343,8 @@ nba-data-platform-reconstruction/
 | Sprint 10 | Cloud deployment - Supabase PostgreSQL + Render Web Service | ✅ Completed |
 | Sprint 11 | Public frontend and live API integration | ✅ Completed |
 | Sprint 12 | ADR completion, QA/security documentation and auto-deploy validation | ✅ Completed |
-| Sprint 13 | API Analytics Endpoints | 📋 Planned |
-| Sprint 14 | Enterprise QA/SPEC documentation with BDD acceptance criteria | 📋 Planned |
+| Sprint 13 | API Analytics Endpoints - championship-predictor, era-analysis, 3point-revolution, young-stars, player-career | ✅ Completed |
+| Sprint 14 | Super SPEC + QA Expert documentation - Gherkin/BDD | 📋 Planned |
 
 ### Planned Sprint 13 endpoints
 

@@ -1830,23 +1830,23 @@
         return;
       }
 
-      const playerName = seasons[0].jogador || name;
-      const totalSeasons = seasons.length;
-      const avgPts = (seasons.reduce((a, s) => a + +(s.pontos || 0), 0) / totalSeasons).toFixed(1);
-      const avgReb = (seasons.reduce((a, s) => a + +(s.rebotes || 0), 0) / totalSeasons).toFixed(1);
-      const avgAst = (seasons.reduce((a, s) => a + +(s.assistencias || 0), 0) / totalSeasons).toFixed(1);
-      const peakPts = Math.max(...seasons.map(s => +(s.pontos || 0))).toFixed(1);
+      const playerName = data.player || seasons[0].jogador || name;
+      const totalSeasons = data.seasons_played || seasons.length;
+      const avgPts = (seasons.reduce((a, s) => a + +(s.points || s.pontos || 0), 0) / seasons.length).toFixed(1);
+      const avgReb = (seasons.reduce((a, s) => a + +(s.rebounds || s.rebotes || 0), 0) / seasons.length).toFixed(1);
+      const avgAst = (seasons.reduce((a, s) => a + +(s.assists || s.assistencias || 0), 0) / seasons.length).toFixed(1);
+      const peakPts = Math.max(...seasons.map(s => +(s.points || s.pontos || 0))).toFixed(1);
 
       const labels = seasons.map(s => (s.season || s.epoca || '').replace('Epoca', ''));
-      const ptsData = seasons.map(s => +(s.pontos || 0));
-      const rebData = seasons.map(s => +(s.rebotes || 0));
-      const astData = seasons.map(s => +(s.assistencias || 0));
+      const ptsData = seasons.map(s => +(s.points || s.pontos || 0));
+      const rebData = seasons.map(s => +(s.rebounds || s.rebotes || 0));
+      const astData = seasons.map(s => +(s.assists || s.assistencias || 0));
 
       container.innerHTML = `
         <div class="career-result">
           <div class="career-header">
             <span class="career-name">${playerName.toUpperCase()}</span>
-            <span class="career-meta">${totalSeasons} season${totalSeasons > 1 ? 's' : ''} · ${seasons[0].equipa || ''}</span>
+            <span class="career-meta">${totalSeasons} season${totalSeasons > 1 ? 's' : ''} · ${seasons[0].equipa || ''} · Peak ${peakPts} PTS</span>
           </div>
           <div class="career-stats-row">
             <div class="career-stat-box">
@@ -1976,19 +1976,19 @@
             <span class="star-meta">${p.equipa || '-'} · ${seasonLabel}</span>
             <div class="star-stats">
               <div class="star-stat">
-                <span class="star-stat-val">${(+(p.pontos || 0)).toFixed(1)}</span>
+                <span class="star-stat-val">${(+(p.points || p.pontos || 0)).toFixed(1)}</span>
                 <span class="star-stat-key">PTS</span>
               </div>
               <div class="star-stat">
-                <span class="star-stat-val" style="color:var(--blue)">${(+(p.rebotes || 0)).toFixed(1)}</span>
+                <span class="star-stat-val" style="color:var(--blue)">${(+(p.rebounds || p.rebotes || 0)).toFixed(1)}</span>
                 <span class="star-stat-key">REB</span>
               </div>
               <div class="star-stat">
-                <span class="star-stat-val" style="color:var(--accent)">${(+(p.assistencias || 0)).toFixed(1)}</span>
+                <span class="star-stat-val" style="color:var(--accent)">${(+(p.assists || p.assistencias || 0)).toFixed(1)}</span>
                 <span class="star-stat-key">AST</span>
               </div>
               <div class="star-stat">
-                <span class="star-stat-val" style="color:var(--gold)">${(+(p.ponto_fantasia || 0)).toFixed(1)}</span>
+                <span class="star-stat-val" style="color:var(--gold)">${(+(p.fantasy_points || p.ponto_fantasia || 0)).toFixed(1)}</span>
                 <span class="star-stat-key">FAN</span>
               </div>
             </div>

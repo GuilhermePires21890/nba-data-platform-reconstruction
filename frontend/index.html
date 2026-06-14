@@ -535,7 +535,7 @@
     /* ─── ERA GRID ─── */
     .era-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
       gap: 1px;
       background: var(--border);
       border: 1px solid var(--border);
@@ -1025,6 +1025,24 @@
 </head>
 <body>
 
+<!-- COLD START BANNER -->
+<div id="cold-start-banner" style="
+  background: rgba(249,115,22,0.08);
+  border-bottom: 1px solid rgba(249,115,22,0.2);
+  padding: 10px 2rem;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted2);
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+">
+  <div style="width:6px;height:6px;border-radius:50%;background:var(--accent);animation:pulse 2s infinite;flex-shrink:0"></div>
+  API starting up - first load may take 30-60 seconds on Render free tier. Subsequent requests are instant.
+</div>
+
 <!-- HEADER -->
 <header>
   <div class="logo">
@@ -1164,6 +1182,7 @@
   <div class="section-header">
     <h2 class="section-title">CHAMPIONSHIP PREDICTOR</h2>
     <span class="section-tag-gold">ML Model · 16x Baseline</span>
+    <span id="champ-mode-label" style="font-size:11px; color:var(--muted); margin-left:auto; font-family:var(--mono)">Predicted champion per season · 25 seasons</span>
     <span class="section-count" id="champ-count"></span>
   </div>
   <div class="controls">
@@ -1272,12 +1291,20 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script>
   const API = 'https://nba-data-platform-api.onrender.com';
+  let _apiReady = false;
 
   // ─── FETCH HELPER ───
   async function apiFetch(path) {
     const res = await fetch(API + path);
     if (!res.ok) throw new Error(`API error: ${res.status}`);
-    return res.json();
+    const data = await res.json();
+    // Hide cold-start banner on first successful call
+    if (!_apiReady) {
+      _apiReady = true;
+      const banner = document.getElementById('cold-start-banner');
+      if (banner) banner.style.display = 'none';
+    }
+    return data;
   }
 
   // ─── CHART DEFAULTS ───
@@ -1412,7 +1439,7 @@
 
       const data = await apiFetch(url);
       let players = data.data;
-      if (team) players = players.filter(p => p.equipa === team);
+      if (team) players = players.filter(p => (p.team || p.equipa) === team);
 
       countEl.textContent = `${players.length} players`;
 
@@ -1421,25 +1448,29 @@
         return;
       }
 
-      const maxPts = Math.max(...players.map(p => +p.pontos));
+      const maxPts = Math.max(...players.map(p => +(p.points || p.pontos || 0)));
 
       const rows = players.map((p, i) => {
         const rankClass = i === 0 ? 'top1' : i === 1 ? 'top2' : i === 2 ? 'top3' : '';
-        const barW = ((+p.pontos / maxPts) * 100).toFixed(1);
+        const pts = +(p.points || p.pontos || 0);
+        const barW = ((pts / maxPts) * 100).toFixed(1);
         const delay = (i * 0.04).toFixed(2);
+        const playerName = p.player || p.jogador || '-';
+        const teamName   = p.team   || p.equipa  || '-';
+        const gp         = p.games_played || p.jogos_jogados || '-';
         return `
           <div class="lb-row" style="animation-delay:${delay}s">
             <span class="lb-rank ${rankClass}">${i + 1}</span>
             <div class="lb-player">
-              <span class="lb-name">${p.jogador}</span>
-              <span class="lb-team">${p.equipa} · ${p.season ? p.season.replace('Epoca','') : '-'}</span>
+              <span class="lb-name">${playerName}</span>
+              <span class="lb-team">${teamName} · ${p.season ? p.season.replace('Epoca','') : '-'}</span>
               <div class="lb-bar-wrap"><div class="lb-bar" style="width:${barW}%"></div></div>
             </div>
-            <span class="lb-stat highlight">${(+p.pontos).toFixed(1)}</span>
-            <span class="lb-stat">${(+p.assistencias).toFixed(1)}</span>
-            <span class="lb-stat">${(+p.rebotes).toFixed(1)}</span>
-            <span class="lb-stat">${(+p.ponto_fantasia).toFixed(1)}</span>
-            <span class="lb-stat" style="font-size:0.9rem; color:var(--muted2)">${p.jogos_jogados || '-'}</span>
+            <span class="lb-stat highlight">${pts.toFixed(1)}</span>
+            <span class="lb-stat">${(+(p.assists || p.assistencias || 0)).toFixed(1)}</span>
+            <span class="lb-stat">${(+(p.rebounds || p.rebotes || 0)).toFixed(1)}</span>
+            <span class="lb-stat">${(+(p.fantasy_points || p.ponto_fantasia || 0)).toFixed(1)}</span>
+            <span class="lb-stat" style="font-size:0.9rem; color:var(--muted2)">${gp}</span>
           </div>
         `;
       }).join('');
@@ -1739,6 +1770,14 @@
 
     container.innerHTML = `<div class="loading"><div class="spinner"></div> Running model...</div>`;
 
+    // Update mode label
+    const modeLabel = document.getElementById('champ-mode-label');
+    if (modeLabel) {
+      modeLabel.textContent = season
+        ? `All teams ranked for ${season.replace('Epoca','')}`
+        : 'Predicted champion per season · 25 seasons';
+    }
+
     try {
       let url = '/analytics/championship-predictor';
       if (season) url += `?season=${encodeURIComponent(season)}`;
@@ -1846,7 +1885,7 @@
         <div class="career-result">
           <div class="career-header">
             <span class="career-name">${playerName.toUpperCase()}</span>
-            <span class="career-meta">${totalSeasons} season${totalSeasons > 1 ? 's' : ''} · ${seasons[0].equipa || ''} · Peak ${peakPts} PTS</span>
+            <span class="career-meta">${totalSeasons} season${totalSeasons > 1 ? 's' : ''} · ${data.teams || seasons[0].equipa || ''} · Peak ${peakPts} PTS</span>
           </div>
           <div class="career-stats-row">
             <div class="career-stat-box">

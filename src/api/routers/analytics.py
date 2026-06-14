@@ -15,6 +15,8 @@ def get_championship_predictor(
     season: str = Query(None, description="Filter by season (e.g. Epoca2020-21)"),
     limit: int = Query(30, le=30),
 ):
+    # FIX BUG-003: when no season filter, return top predicted_rank=1 per season
+    # so "All Seasons" shows 25 champions, not just 2020-21
     query = """
         WITH roster_stats AS (
             SELECT
@@ -59,11 +61,16 @@ def get_championship_predictor(
     params = []
 
     if season:
+        # specific season: return all teams ranked
         query += " AND season = %s"
         params.append(season)
-
-    query += " ORDER BY season DESC, predicted_rank ASC LIMIT %s"
-    params.append(limit)
+        query += " ORDER BY predicted_rank ASC LIMIT %s"
+        params.append(limit)
+    else:
+        # all seasons: return predicted champion (rank 1) per season
+        query += " AND predicted_rank = 1"
+        query += " ORDER BY season DESC LIMIT %s"
+        params.append(limit)
 
     with get_connection() as conn:
         with conn.cursor() as cur:
@@ -145,30 +152,54 @@ def get_young_stars(
     season: str = Query(None),
     limit: int = Query(25, le=50),
 ):
-    query = """
-        SELECT
-            jogador,
-            equipa,
-            season,
-            idade,
-            jogos_jogados,
-            ROUND(pontos, 1)            AS points,
-            ROUND(assistencias, 1)      AS assists,
-            ROUND(rebotes, 1)           AS rebounds,
-            ROUND(ponto_fantasia, 1)    AS fantasy_points,
-            triplos_duplos
-        FROM player_stats
-        WHERE idade <= 25
-          AND jogos_jogados >= 50
-    """
-    params = []
-
+    # FIX BUG-004: when no season filter, return best season per player (no duplicates)
+    # when season filter active, return all players in that season
     if season:
-        query += " AND season = %s"
-        params.append(season)
-
-    query += " ORDER BY ponto_fantasia DESC LIMIT %s"
-    params.append(limit)
+        query = """
+            SELECT
+                jogador,
+                equipa,
+                season,
+                idade,
+                jogos_jogados,
+                ROUND(pontos, 1)            AS points,
+                ROUND(assistencias, 1)      AS assists,
+                ROUND(rebotes, 1)           AS rebounds,
+                ROUND(ponto_fantasia, 1)    AS fantasy_points,
+                triplos_duplos
+            FROM player_stats
+            WHERE idade <= 25
+              AND jogos_jogados >= 50
+              AND season = %s
+            ORDER BY ponto_fantasia DESC
+            LIMIT %s
+        """
+        params = [season, limit]
+    else:
+        # Deduplicate: best fantasy season per player
+        query = """
+            WITH best_season AS (
+                SELECT DISTINCT ON (jogador)
+                    jogador,
+                    equipa,
+                    season,
+                    idade,
+                    jogos_jogados,
+                    ROUND(pontos, 1)            AS points,
+                    ROUND(assistencias, 1)      AS assists,
+                    ROUND(rebotes, 1)           AS rebounds,
+                    ROUND(ponto_fantasia, 1)    AS fantasy_points,
+                    triplos_duplos
+                FROM player_stats
+                WHERE idade <= 25
+                  AND jogos_jogados >= 50
+                ORDER BY jogador, ponto_fantasia DESC
+            )
+            SELECT * FROM best_season
+            ORDER BY fantasy_points DESC
+            LIMIT %s
+        """
+        params = [limit]
 
     with get_connection() as conn:
         with conn.cursor() as cur:
@@ -209,11 +240,39 @@ def get_player_career(
             results = cur.fetchall()
 
     if not results:
-        return {"data": [], "count": 0, "player": player_name}
+        return {"data": [], "count": 0, "player": player_name, "seasons_played": 0}
+
+    # FIX BUG-005: collect all unique teams for header display
+    teams = list(dict.fromkeys(r["equipa"] for r in results))
+    teams_display = " / ".join(teams) if len(teams) <= 3 else f"{teams[0]} / {teams[1]} / +{len(teams)-2} more"
 
     return {
         "player": player_name,
+        "teams": teams_display,
         "seasons_played": len(results),
         "data": results,
         "count": len(results),
     }
+
+
+@router.get("/all-time-records")
+@limiter.limit("30/minute")
+def get_all_time_records(request: Request):
+    # Sprint 18 placeholder - returns structured records from 25 seasons
+    query = """
+        SELECT
+            MAX(pontos)             AS highest_ppg,
+            MAX(rebotes)            AS highest_rpg,
+            MAX(assistencias)       AS highest_apg,
+            MAX(ponto_fantasia)     AS highest_fantasy,
+            MAX(triplos_duplos)     AS most_triple_doubles
+        FROM player_stats
+        WHERE jogos_jogados >= 50
+    """
+
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(query)
+            result = cur.fetchone()
+
+    return {"records": result}

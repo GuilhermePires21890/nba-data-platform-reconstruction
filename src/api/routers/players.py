@@ -47,8 +47,18 @@ def get_top_scorers(
     season: str = Query(None),
     limit: int = Query(10, le=50),
 ):
+    # FIX BUG-001: added games_played to SELECT
+    # FIX BUG-002: normalised field names to English
     query = """
-        SELECT jogador, equipa, season, pontos, assistencias, rebotes, ponto_fantasia
+        SELECT
+            jogador                         AS player,
+            equipa                          AS team,
+            season,
+            jogos_jogados                   AS games_played,
+            ROUND(pontos, 1)                AS points,
+            ROUND(assistencias, 1)          AS assists,
+            ROUND(rebotes, 1)               AS rebounds,
+            ROUND(ponto_fantasia, 1)        AS fantasy_points
         FROM player_stats
         WHERE jogos_jogados >= 50
     """

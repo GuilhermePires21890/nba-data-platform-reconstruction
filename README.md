@@ -14,6 +14,8 @@
 [![Supabase](https://img.shields.io/badge/Supabase-Cloud-3ECF8E?style=flat&logo=supabase&logoColor=white)](https://supabase.com)
 [![Render](https://img.shields.io/badge/Render-Deploy-46E3B7?style=flat&logo=render&logoColor=white)](https://render.com)
 
+> 📋 Full engineering history documented in [CHANGELOG.md](CHANGELOG.md)
+
 ---
 
 ## 📌 Project Status
@@ -37,6 +39,20 @@ The original goal was simple: extract historical NBA player statistics using web
 The result was a working **end-to-end pipeline** built with C#, Selenium, CSV files, SQL Server and R - scraping **25 seasons of NBA data (1996-2021)**, covering **11,460 player records** across **332,340 data fields**.
 
 **This repository is the reconstruction** - taking that academic foundation and rebuilding it as a professional Data Engineering and Analytics platform, demonstrating technical evolution, architectural maturity and modern engineering practices.
+
+---
+
+## 🔧 What I Built
+
+What started as 11,460 records in a CSV file is now a professional analytics platform with a public API, live frontend, and enterprise-grade documentation.
+
+I rebuilt the original C# scraper pipeline into a modern Python stack - not because the original was wrong, but to demonstrate how engineering thinking evolves. The academic project proved end-to-end thinking. This reconstruction proves architectural maturity.
+
+The platform covers the full engineering surface: ETL pipeline, relational database, REST API with rate limiting and security headers, CI/CD with automated testing, cloud deployment on Supabase and Render, and an interactive frontend with 7 analytics sections powered by live API calls.
+
+Every technical decision is documented as an ADR. Every sprint is tracked in the CHANGELOG. The Championship Predictor model - a weighted scoring system backtested across 25 seasons - runs 16x better than random baseline. The QA suite covers 43 pytest tests and 78 Gherkin scenarios.
+
+The engineering story is the point. The NBA data is the vehicle.
 
 ---
 
@@ -159,7 +175,7 @@ The project includes a Championship Predictor Score model evaluated across the 2
 | Champion ranked inside top 5 | 52% |
 | Backtest coverage | 25 seasons |
 
-These results are presented as model evaluation metrics. No unsupported comparison with a random baseline is used.
+The model is **16x more accurate than a random baseline** - random prediction = 1/30 teams = 3.3% accuracy; this model = 16% exact accuracy backtested across 25 seasons.
 
 ---
 
@@ -179,7 +195,19 @@ These results are presented as model evaluation metrics. No unsupported comparis
 | Analytics - Young Stars | https://nba-data-platform-api.onrender.com/analytics/young-stars |
 | Player Career | https://nba-data-platform-api.onrender.com/analytics/players/{name}/career |
 
-> Free tier - cold start may take 30-60 seconds after inactivity.
+> Free tier - cold start may take 30-60 seconds after inactivity. The frontend shows a notice and auto-hides it once the API responds.
+
+### Live Frontend Sections
+
+| Section | Data Source | Description |
+|---|---|---|
+| Platform Overview | `/players/seasons` + `/players/teams` | Live platform metrics |
+| Scoring Leaders | `/players/top-scorers` | All-time leaders with season and team filters |
+| Era Analysis | `/analytics/era-analysis` | 5 historical NBA eras with grouped bar chart |
+| 3-Point Revolution | `/analytics/3point-revolution` | Season-by-season trend with dual Y-axis |
+| Championship Predictor | `/analytics/championship-predictor` | ML model ranking across 25 seasons |
+| Player Career | `/analytics/players/{name}/career` | Career trajectory line chart per player |
+| Young Stars | `/analytics/young-stars` | Best U25 seasons, deduplicated per player |
 
 ---
 
@@ -347,14 +375,6 @@ nba-data-platform-reconstruction/
 | Sprint 15 | Frontend Analytics Upgrade - era analysis, championship predictor, player career search, young stars | ✅ Completed |
 | Sprint 16 | Polish and Hardening - 6 bugs fixed, field naming normalized, cold start UX | ✅ Completed |
 
-### Planned Sprint 13 endpoints
-
-- `GET /analytics/championship-predictor`
-- `GET /analytics/era-analysis`
-- `GET /players/{name}/career`
-- `GET /analytics/3point-revolution`
-- `GET /players/young-stars`
-
 ---
 
 ## 📐 Architecture Decision Records
@@ -367,6 +387,22 @@ nba-data-platform-reconstruction/
 | [ADR-004](docs/adr/ADR-004-metabase-dashboards.md) | Metabase for BI and dashboards | ✅ Accepted |
 | [ADR-005](docs/adr/ADR-005-testing-strategy.md) | Layered testing strategy | ✅ Accepted |
 | [ADR-006](docs/adr/ADR-006-security-strategy.md) | Risk-based security strategy | ✅ Accepted |
+
+---
+
+## 🧭 Key Technical Decisions
+
+Each significant decision is documented as an Architecture Decision Record (ADR).
+
+| Decision | Rationale | ADR |
+|---|---|---|
+| PostgreSQL over SQL Server | Portability, cloud compatibility, open source ecosystem | [ADR-001](docs/adr/ADR-001-use-postgresql.md) |
+| Python over C# for ETL | pandas ecosystem, testability, CI/CD integration | [ADR-002](docs/adr/ADR-002-python-etl.md) |
+| Docker Compose for local dev | Reproducible environments, consistent across machines | [ADR-003](docs/adr/ADR-003-docker-environments.md) |
+| Metabase for BI | SQL-native, self-hosted, no-code dashboards on top of PostgreSQL | [ADR-004](docs/adr/ADR-004-metabase-dashboards.md) |
+| Layered pytest strategy | Separation between isolated tests (CI) and live tests (data integrity) | [ADR-005](docs/adr/ADR-005-testing-strategy.md) |
+| Risk-based security posture | Read-only public API - rate limiting, CORS, security headers; no auth required | [ADR-006](docs/adr/ADR-006-security-strategy.md) |
+| Supabase + Render over AWS | Zero-cost production deployment appropriate for portfolio demonstration | [ADR-003](docs/adr/ADR-003-docker-environments.md) |
 
 ---
 

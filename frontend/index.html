@@ -19,6 +19,8 @@
       --muted:     #64748b;
       --muted2:    #94a3b8;
       --success:   #22c55e;
+      --blue:      #38bdf8;
+      --purple:    #a78bfa;
       --mono:      'DM Mono', monospace;
       --display:   'Bebas Neue', sans-serif;
       --serif:     'Fraunces', serif;
@@ -278,6 +280,39 @@
       border-radius: 2px;
     }
 
+    .section-tag-blue {
+      font-size: 10px;
+      letter-spacing: 0.15em;
+      color: var(--blue);
+      text-transform: uppercase;
+      background: rgba(56,189,248,0.1);
+      border: 1px solid rgba(56,189,248,0.2);
+      padding: 2px 8px;
+      border-radius: 2px;
+    }
+
+    .section-tag-purple {
+      font-size: 10px;
+      letter-spacing: 0.15em;
+      color: var(--purple);
+      text-transform: uppercase;
+      background: rgba(167,139,250,0.1);
+      border: 1px solid rgba(167,139,250,0.2);
+      padding: 2px 8px;
+      border-radius: 2px;
+    }
+
+    .section-tag-gold {
+      font-size: 10px;
+      letter-spacing: 0.15em;
+      color: var(--gold);
+      text-transform: uppercase;
+      background: rgba(251,191,36,0.1);
+      border: 1px solid rgba(251,191,36,0.2);
+      padding: 2px 8px;
+      border-radius: 2px;
+    }
+
     .section-count {
       margin-left: auto;
       font-size: 11px;
@@ -307,7 +342,7 @@
       text-transform: uppercase;
     }
 
-    select, input {
+    select, input[type="text"] {
       background: var(--bg2);
       border: 1px solid var(--border);
       color: var(--text);
@@ -321,8 +356,8 @@
       min-width: 160px;
     }
 
-    select:hover, input:hover,
-    select:focus, input:focus {
+    select:hover, input[type="text"]:hover,
+    select:focus, input[type="text"]:focus {
       border-color: var(--accent);
     }
 
@@ -427,6 +462,8 @@
     }
 
     .lb-stat.highlight { color: var(--accent); }
+    .lb-stat.highlight-blue { color: var(--blue); }
+    .lb-stat.highlight-gold { color: var(--gold); }
 
     .lb-bar-wrap {
       grid-column: 1 / -1;
@@ -440,6 +477,13 @@
     .lb-bar {
       height: 100%;
       background: linear-gradient(90deg, var(--accent), var(--gold));
+      border-radius: 1px;
+      transition: width 0.8s cubic-bezier(0.16,1,0.3,1);
+    }
+
+    .lb-bar-blue {
+      height: 100%;
+      background: linear-gradient(90deg, var(--blue), var(--purple));
       border-radius: 1px;
       transition: width 0.8s cubic-bezier(0.16,1,0.3,1);
     }
@@ -462,6 +506,14 @@
       background: linear-gradient(90deg, var(--accent), var(--gold), transparent);
     }
 
+    .chart-container.blue-accent::before {
+      background: linear-gradient(90deg, var(--blue), var(--purple), transparent);
+    }
+
+    .chart-container.gold-accent::before {
+      background: linear-gradient(90deg, var(--gold), var(--accent), transparent);
+    }
+
     .chart-title {
       font-family: var(--display);
       font-size: 1.3rem;
@@ -477,7 +529,308 @@
 
     canvas {
       width: 100% !important;
-      max-height: 300px;
+      max-height: 320px;
+    }
+
+    /* ─── ERA GRID ─── */
+    .era-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      margin-bottom: 2rem;
+    }
+
+    .era-card {
+      background: var(--bg2);
+      padding: 1.5rem;
+      transition: background 0.2s;
+      position: relative;
+      overflow: hidden;
+      cursor: default;
+    }
+
+    .era-card:hover { background: var(--bg3); }
+
+    .era-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      transition: opacity 0.2s;
+    }
+
+    .era-card.era-jordan::before   { background: var(--gold); }
+    .era-card.era-stars::before    { background: var(--blue); }
+    .era-card.era-analytics::before{ background: var(--purple); }
+    .era-card.era-warriors::before { background: var(--success); }
+    .era-card.era-modern::before   { background: var(--accent); }
+
+    .era-label {
+      font-size: 10px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 0.5rem;
+    }
+
+    .era-name {
+      font-family: var(--display);
+      font-size: 1.1rem;
+      letter-spacing: 0.05em;
+      margin-bottom: 1rem;
+    }
+
+    .era-seasons {
+      font-size: 11px;
+      color: var(--muted2);
+      margin-bottom: 1rem;
+    }
+
+    .era-stat-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      padding: 4px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .era-stat-row:last-child { border-bottom: none; }
+
+    .era-stat-key {
+      font-size: 10px;
+      color: var(--muted);
+      letter-spacing: 0.08em;
+    }
+
+    .era-stat-val {
+      font-family: var(--display);
+      font-size: 1.1rem;
+      color: var(--text);
+    }
+
+    /* ─── CHAMPIONSHIP TABLE ─── */
+    .champ-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .champ-table th {
+      background: var(--bg3);
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      padding: 10px 16px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+
+    .champ-table th:not(:first-child) { text-align: right; }
+
+    .champ-table td {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      color: var(--text);
+      font-size: 13px;
+    }
+
+    .champ-table td:not(:first-child):not(:nth-child(2)) { text-align: right; }
+
+    .champ-table tr:hover td { background: rgba(255,255,255,0.02); }
+    .champ-table tr:last-child td { border-bottom: none; }
+
+    .rank-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      font-family: var(--display);
+      font-size: 1rem;
+      background: var(--bg3);
+      color: var(--muted);
+      border: 1px solid var(--border);
+    }
+
+    .rank-badge.r1 { background: rgba(251,191,36,0.15); color: var(--gold); border-color: var(--gold); }
+    .rank-badge.r2 { background: rgba(148,163,184,0.1); color: var(--muted2); border-color: var(--muted2); }
+    .rank-badge.r3 { background: rgba(205,124,58,0.1); color: #cd7c3a; border-color: #cd7c3a; }
+
+    .score-cell {
+      font-family: var(--display);
+      font-size: 1.2rem;
+    }
+
+    .score-bar-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .score-bar-track {
+      flex: 1;
+      height: 3px;
+      background: var(--bg3);
+      border-radius: 2px;
+      overflow: hidden;
+      min-width: 60px;
+    }
+
+    .score-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--gold), var(--accent));
+      border-radius: 2px;
+      transition: width 0.8s cubic-bezier(0.16,1,0.3,1);
+    }
+
+    /* ─── PLAYER SEARCH ─── */
+    .player-search-box {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 2rem;
+      align-items: flex-end;
+    }
+
+    .player-search-box input {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .career-result {
+      margin-top: 1.5rem;
+    }
+
+    .career-header {
+      display: flex;
+      align-items: baseline;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    .career-name {
+      font-family: var(--display);
+      font-size: 2rem;
+      letter-spacing: 0.05em;
+      color: var(--text);
+    }
+
+    .career-meta {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .career-stats-row {
+      display: flex;
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      margin-bottom: 2rem;
+    }
+
+    .career-stat-box {
+      flex: 1;
+      background: var(--bg2);
+      padding: 1rem 1.5rem;
+      text-align: center;
+    }
+
+    .career-stat-num {
+      font-family: var(--display);
+      font-size: 1.8rem;
+      color: var(--accent);
+      display: block;
+    }
+
+    .career-stat-label {
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    /* ─── YOUNG STARS ─── */
+    .young-stars-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .star-card {
+      background: var(--bg2);
+      padding: 1.25rem 1.5rem;
+      transition: background 0.2s;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      opacity: 0;
+      animation: fadeUp 0.4s forwards;
+    }
+
+    .star-card:hover { background: var(--bg3); }
+
+    .star-rank {
+      font-family: var(--display);
+      font-size: 0.9rem;
+      color: var(--muted);
+      letter-spacing: 0.1em;
+    }
+
+    .star-name {
+      font-family: var(--display);
+      font-size: 1.4rem;
+      letter-spacing: 0.04em;
+      color: var(--text);
+    }
+
+    .star-meta {
+      font-size: 10px;
+      color: var(--muted);
+      letter-spacing: 0.08em;
+    }
+
+    .star-stats {
+      display: flex;
+      gap: 1.5rem;
+      margin-top: 0.5rem;
+      padding-top: 0.75rem;
+      border-top: 1px solid var(--border);
+    }
+
+    .star-stat {
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+    }
+
+    .star-stat-val {
+      font-family: var(--display);
+      font-size: 1.4rem;
+      color: var(--purple);
+    }
+
+    .star-stat-key {
+      font-size: 9px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
     }
 
     /* ─── CARDS GRID ─── */
@@ -536,7 +889,7 @@
 
     .card-accent { color: var(--accent); }
 
-    /* ─── LOADING ─── */
+    /* ─── LOADING / ERROR ─── */
     .loading {
       display: flex;
       align-items: center;
@@ -565,6 +918,25 @@
       background: rgba(239,68,68,0.05);
       border: 1px solid rgba(239,68,68,0.2);
       border-radius: 4px;
+    }
+
+    .empty-msg {
+      color: var(--muted);
+      font-size: 12px;
+      padding: 2rem;
+      text-align: center;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+    }
+
+    /* ─── SECTION DIVIDER ─── */
+    .section-divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      max-width: 1400px;
+      margin: 0 auto;
+      opacity: 0.5;
     }
 
     /* ─── FOOTER ─── */
@@ -643,6 +1015,11 @@
       .lb-row > *:nth-child(n+5) { display: none; }
       footer { grid-template-columns: 1fr; }
       .footer-bottom { flex-direction: column; gap: 1rem; text-align: center; }
+      .era-grid { grid-template-columns: 1fr; }
+      .career-stats-row { flex-wrap: wrap; }
+      .career-stat-box { min-width: 80px; }
+      .champ-table th:nth-child(n+4),
+      .champ-table td:nth-child(n+4) { display: none; }
     }
   </style>
 </head>
@@ -708,6 +1085,8 @@
   </div>
 </section>
 
+<hr class="section-divider" />
+
 <!-- TOP SCORERS -->
 <section>
   <div class="section-header">
@@ -745,7 +1124,27 @@
   </div>
 </section>
 
-<!-- 3PT REVOLUTION CHART -->
+<hr class="section-divider" />
+
+<!-- ERA ANALYSIS -->
+<section>
+  <div class="section-header">
+    <h2 class="section-title">ERA ANALYSIS</h2>
+    <span class="section-tag-blue">5 Historical Eras</span>
+  </div>
+  <div id="era-grid-container">
+    <div class="loading"><div class="spinner"></div> Analysing eras...</div>
+  </div>
+  <div class="chart-container blue-accent" style="margin-top: 2rem;">
+    <p class="chart-title">Points Per Player by Era</p>
+    <p class="chart-subtitle">Average scoring across 5 distinct NBA eras - from the Jordan dynasty to the modern 3-point era</p>
+    <canvas id="eraChart"></canvas>
+  </div>
+</section>
+
+<hr class="section-divider" />
+
+<!-- 3-POINT REVOLUTION -->
 <section>
   <div class="section-header">
     <h2 class="section-title">3-POINT REVOLUTION</h2>
@@ -753,8 +1152,82 @@
   </div>
   <div class="chart-container">
     <p class="chart-title">Average 3-Pointers Made Per Player</p>
-    <p class="chart-subtitle">1996–97 to 2020–21 · minimum 20 games played · the Steph Curry era is visible</p>
+    <p class="chart-subtitle">1996-97 to 2020-21 · minimum 20 games played · the Steph Curry era is visible</p>
     <canvas id="trendChart"></canvas>
+  </div>
+</section>
+
+<hr class="section-divider" />
+
+<!-- CHAMPIONSHIP PREDICTOR -->
+<section>
+  <div class="section-header">
+    <h2 class="section-title">CHAMPIONSHIP PREDICTOR</h2>
+    <span class="section-tag-gold">ML Model · 16x Baseline</span>
+    <span class="section-count" id="champ-count"></span>
+  </div>
+  <div class="controls">
+    <div class="control-group">
+      <span class="control-label">Season</span>
+      <select id="champ-season-filter">
+        <option value="">All Seasons</option>
+      </select>
+    </div>
+    <button class="btn" style="background: var(--gold); " onclick="loadChampionshipPredictor()">RUN MODEL</button>
+  </div>
+  <div id="champ-container">
+    <div class="loading"><div class="spinner"></div> Loading predictor...</div>
+  </div>
+</section>
+
+<hr class="section-divider" />
+
+<!-- PLAYER CAREER SEARCH -->
+<section>
+  <div class="section-header">
+    <h2 class="section-title">PLAYER CAREER</h2>
+    <span class="section-tag-purple">Career Trajectory</span>
+  </div>
+  <div class="player-search-box">
+    <div class="control-group" style="flex:1">
+      <span class="control-label">Search Player</span>
+      <input type="text" id="player-search-input" placeholder="e.g. LeBron James, Kobe Bryant, Tim Duncan..." />
+    </div>
+    <button class="btn" onclick="loadPlayerCareer()">SEARCH</button>
+  </div>
+  <div id="career-container">
+    <div class="empty-msg">Enter a player name to explore their career trajectory across 25 seasons.</div>
+  </div>
+</section>
+
+<hr class="section-divider" />
+
+<!-- YOUNG STARS -->
+<section>
+  <div class="section-header">
+    <h2 class="section-title">YOUNG STARS</h2>
+    <span class="section-tag-purple">Under 25</span>
+    <span class="section-count" id="young-count"></span>
+  </div>
+  <div class="controls">
+    <div class="control-group">
+      <span class="control-label">Season</span>
+      <select id="young-season-filter">
+        <option value="">All Seasons</option>
+      </select>
+    </div>
+    <div class="control-group">
+      <span class="control-label">Show</span>
+      <select id="young-limit-filter">
+        <option value="10">Top 10</option>
+        <option value="20">Top 20</option>
+        <option value="30">Top 30</option>
+      </select>
+    </div>
+    <button class="btn" style="background: var(--purple);" onclick="loadYoungStars()">APPLY</button>
+  </div>
+  <div id="young-stars-container">
+    <div class="loading"><div class="spinner"></div> Loading young stars...</div>
   </div>
 </section>
 
@@ -771,8 +1244,9 @@
     <div class="footer-links">
       <a href="https://nba-data-platform-api.onrender.com/docs" target="_blank">API Documentation →</a>
       <a href="https://github.com/GuilhermePires21890/nba-data-platform-reconstruction" target="_blank">GitHub Repository →</a>
-      <a href="https://nba-data-platform-api.onrender.com/players/seasons" target="_blank">Seasons Endpoint →</a>
-      <a href="https://nba-data-platform-api.onrender.com/players/top-scorers" target="_blank">Top Scorers Endpoint →</a>
+      <a href="https://nba-data-platform-api.onrender.com/analytics/era-analysis" target="_blank">Era Analysis Endpoint →</a>
+      <a href="https://nba-data-platform-api.onrender.com/analytics/championship-predictor" target="_blank">Championship Predictor Endpoint →</a>
+      <a href="https://nba-data-platform-api.onrender.com/analytics/3point-revolution" target="_blank">3-Point Revolution Endpoint →</a>
     </div>
   </div>
   <div>
@@ -799,11 +1273,49 @@
 <script>
   const API = 'https://nba-data-platform-api.onrender.com';
 
-  // ─── FETCH HELPERS ───
+  // ─── FETCH HELPER ───
   async function apiFetch(path) {
     const res = await fetch(API + path);
     if (!res.ok) throw new Error(`API error: ${res.status}`);
     return res.json();
+  }
+
+  // ─── CHART DEFAULTS ───
+  const CHART_DEFAULTS = {
+    backgroundColor: '#0e1118',
+    borderColor: 'rgba(255,255,255,0.1)',
+    titleColor: '#f97316',
+    bodyColor: '#f1f5f9',
+    gridColor: 'rgba(255,255,255,0.04)',
+    tickColor: '#64748b',
+    tickFont: { family: 'DM Mono', size: 10 }
+  };
+
+  function baseTooltip() {
+    return {
+      backgroundColor: CHART_DEFAULTS.backgroundColor,
+      borderColor: CHART_DEFAULTS.borderColor,
+      borderWidth: 1,
+      titleColor: CHART_DEFAULTS.titleColor,
+      bodyColor: CHART_DEFAULTS.bodyColor
+    };
+  }
+
+  function baseScales(yCallback) {
+    return {
+      x: {
+        grid: { color: CHART_DEFAULTS.gridColor },
+        ticks: { color: CHART_DEFAULTS.tickColor, font: CHART_DEFAULTS.tickFont, maxRotation: 45 }
+      },
+      y: {
+        grid: { color: CHART_DEFAULTS.gridColor },
+        ticks: {
+          color: CHART_DEFAULTS.tickColor,
+          font: CHART_DEFAULTS.tickFont,
+          callback: yCallback || (v => v)
+        }
+      }
+    };
   }
 
   // ─── OVERVIEW CARDS ───
@@ -814,12 +1326,11 @@
         apiFetch('/players/seasons'),
         apiFetch('/players/teams')
       ]);
-
       el.innerHTML = `
         <div class="stat-card">
           <p class="card-label">Total Seasons</p>
           <p class="card-value">${seasons.seasons.length}</p>
-          <p class="card-sub">1996–97 → 2020–21</p>
+          <p class="card-sub">1996-97 to 2020-21</p>
         </div>
         <div class="stat-card">
           <p class="card-label">Total Teams</p>
@@ -834,7 +1345,7 @@
         <div class="stat-card">
           <p class="card-label">Data Fields</p>
           <p class="card-value">332K</p>
-          <p class="card-sub">30 stats × 11,460 records</p>
+          <p class="card-sub">30 stats x 11,460 records</p>
         </div>
         <div class="stat-card">
           <p class="card-label">API Status</p>
@@ -844,11 +1355,11 @@
         <div class="stat-card">
           <p class="card-label">Championship Model</p>
           <p class="card-value">16%</p>
-          <p class="card-sub">Exact accuracy · 16× better than random</p>
+          <p class="card-sub">Exact accuracy · 16x better than random</p>
         </div>
       `;
     } catch (e) {
-      el.innerHTML = `<div class="error-msg">⚠ Could not load overview. API may be waking up - try again in 30s.</div>`;
+      el.innerHTML = `<div class="error-msg">Could not load overview. API may be waking up - try again in 30s.</div>`;
     }
   }
 
@@ -860,12 +1371,19 @@
         apiFetch('/players/teams')
       ]);
 
+      // Scoring leaders filters
       const seasonSel = document.getElementById('season-filter');
+      const champSel  = document.getElementById('champ-season-filter');
+      const youngSel  = document.getElementById('young-season-filter');
+
       seasons.seasons.forEach(s => {
-        const opt = document.createElement('option');
-        opt.value = s;
-        opt.textContent = s.replace('Epoca', '');
-        seasonSel.appendChild(opt);
+        const label = s.replace('Epoca', '');
+        [seasonSel, champSel, youngSel].forEach(sel => {
+          const opt = document.createElement('option');
+          opt.value = s;
+          opt.textContent = label;
+          sel.appendChild(opt);
+        });
       });
 
       const teamSel = document.getElementById('team-filter');
@@ -894,7 +1412,6 @@
 
       const data = await apiFetch(url);
       let players = data.data;
-
       if (team) players = players.filter(p => p.equipa === team);
 
       countEl.textContent = `${players.length} players`;
@@ -910,16 +1427,13 @@
         const rankClass = i === 0 ? 'top1' : i === 1 ? 'top2' : i === 2 ? 'top3' : '';
         const barW = ((+p.pontos / maxPts) * 100).toFixed(1);
         const delay = (i * 0.04).toFixed(2);
-
         return `
           <div class="lb-row" style="animation-delay:${delay}s">
             <span class="lb-rank ${rankClass}">${i + 1}</span>
             <div class="lb-player">
               <span class="lb-name">${p.jogador}</span>
               <span class="lb-team">${p.equipa} · ${p.season ? p.season.replace('Epoca','') : '-'}</span>
-              <div class="lb-bar-wrap">
-                <div class="lb-bar" style="width:${barW}%"></div>
-              </div>
+              <div class="lb-bar-wrap"><div class="lb-bar" style="width:${barW}%"></div></div>
             </div>
             <span class="lb-stat highlight">${(+p.pontos).toFixed(1)}</span>
             <span class="lb-stat">${(+p.assistencias).toFixed(1)}</span>
@@ -933,8 +1447,7 @@
       container.innerHTML = `
         <div class="leaderboard">
           <div class="lb-row header-row">
-            <span>#</span>
-            <span>Player</span>
+            <span>#</span><span>Player</span>
             <span style="text-align:right">PTS</span>
             <span style="text-align:right">AST</span>
             <span style="text-align:right">REB</span>
@@ -942,21 +1455,217 @@
             <span style="text-align:right">GP</span>
           </div>
           ${rows}
-        </div>
-      `;
+        </div>`;
     } catch (e) {
-      container.innerHTML = `<div class="error-msg">⚠ API may be waking up. Please wait 30–60 seconds and try again.</div>`;
+      container.innerHTML = `<div class="error-msg">API may be waking up. Please wait 30-60 seconds and try again.</div>`;
     }
+  }
+
+  // ─── ERA ANALYSIS ───
+  const ERA_COLORS = {
+    'Jordan Dynasty':    { color: '#fbbf24', class: 'era-jordan'   },
+    'Post-Jordan Stars': { color: '#38bdf8', class: 'era-stars'    },
+    'Analytics Era':     { color: '#a78bfa', class: 'era-analytics' },
+    'Warriors Dynasty':  { color: '#22c55e', class: 'era-warriors' },
+    'Modern Era':        { color: '#f97316', class: 'era-modern'   },
+  };
+
+  let eraChartInstance = null;
+
+  async function loadEraAnalysis() {
+    const container = document.getElementById('era-grid-container');
+    try {
+      const data = await apiFetch('/analytics/era-analysis');
+      const eras = data.data || [];
+
+      if (!eras.length) {
+        container.innerHTML = `<div class="empty-msg">Era data not available.</div>`;
+        return;
+      }
+
+      const cards = eras.map(era => {
+        const cfg = ERA_COLORS[era.era] || { color: '#f97316', class: '' };
+        return `
+          <div class="era-card ${cfg.class}">
+            <p class="era-label">Era</p>
+            <p class="era-name" style="color:${cfg.color}">${era.era}</p>
+            <p class="era-seasons">${era.seasons_covered || ''}</p>
+            <div class="era-stat-row">
+              <span class="era-stat-key">Avg PTS</span>
+              <span class="era-stat-val" style="color:${cfg.color}">${(+era.avg_pts).toFixed(1)}</span>
+            </div>
+            <div class="era-stat-row">
+              <span class="era-stat-key">Avg REB</span>
+              <span class="era-stat-val">${(+era.avg_reb).toFixed(1)}</span>
+            </div>
+            <div class="era-stat-row">
+              <span class="era-stat-key">Avg AST</span>
+              <span class="era-stat-val">${(+era.avg_ast).toFixed(1)}</span>
+            </div>
+            <div class="era-stat-row">
+              <span class="era-stat-key">Avg 3PM</span>
+              <span class="era-stat-val">${(+era.avg_3pm).toFixed(2)}</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      container.innerHTML = `<div class="era-grid">${cards}</div>`;
+
+      // Build era chart
+      const labels = eras.map(e => e.era);
+      const ptsVals = eras.map(e => +(+era_lookup(eras, e.era, 'avg_pts')).toFixed(1));
+      const rebVals = eras.map(e => +(+era_lookup(eras, e.era, 'avg_reb')).toFixed(1));
+      const astVals = eras.map(e => +(+era_lookup(eras, e.era, 'avg_ast')).toFixed(1));
+      const bgColors = eras.map(e => (ERA_COLORS[e.era] || {color:'#f97316'}).color + '99');
+      const bdColors = eras.map(e => (ERA_COLORS[e.era] || {color:'#f97316'}).color);
+
+      if (eraChartInstance) eraChartInstance.destroy();
+
+      const ctx = document.getElementById('eraChart').getContext('2d');
+      eraChartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [
+            {
+              label: 'Avg PTS',
+              data: ptsVals,
+              backgroundColor: bgColors,
+              borderColor: bdColors,
+              borderWidth: 1,
+              borderRadius: 3,
+            },
+            {
+              label: 'Avg REB',
+              data: rebVals,
+              backgroundColor: 'rgba(56,189,248,0.3)',
+              borderColor: '#38bdf8',
+              borderWidth: 1,
+              borderRadius: 3,
+            },
+            {
+              label: 'Avg AST',
+              data: astVals,
+              backgroundColor: 'rgba(167,139,250,0.3)',
+              borderColor: '#a78bfa',
+              borderWidth: 1,
+              borderRadius: 3,
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: true,
+          plugins: {
+            legend: {
+              labels: { color: '#64748b', font: { family: 'DM Mono', size: 10 } }
+            },
+            tooltip: {
+              ...baseTooltip(),
+              callbacks: { label: c => ` ${c.dataset.label}: ${c.parsed.y.toFixed(1)}` }
+            }
+          },
+          scales: baseScales(v => v.toFixed(1))
+        }
+      });
+
+    } catch (e) {
+      container.innerHTML = `<div class="error-msg">Era analysis unavailable. API may be starting up.</div>`;
+    }
+  }
+
+  function era_lookup(arr, name, field) {
+    const found = arr.find(e => e.era === name);
+    return found ? found[field] : 0;
   }
 
   // ─── 3PT REVOLUTION CHART ───
   async function loadTrendChart() {
     try {
-      const data = await apiFetch('/players/seasons');
-      const seasons = data.seasons;
+      const data = await apiFetch('/analytics/3point-revolution');
+      const rows = data.data || [];
 
-      // Hardcoded trend data from our SQL analysis
-      const trendData = {
+      if (!rows.length) throw new Error('empty');
+
+      // Clean season label: "Epoca1996-97" -> "1996-97"
+      const labels = rows.map(r => (r.season || '').replace('Epoca', ''));
+      const made   = rows.map(r => +(+r.avg_3pm).toFixed(2));
+      const pct    = rows.map(r => +(+r.league_3p_pct).toFixed(1));
+
+      const ctx = document.getElementById('trendChart').getContext('2d');
+      new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [
+            {
+              label: 'Avg 3PM per Player',
+              data: made,
+              borderColor: '#f97316',
+              backgroundColor: 'rgba(249,115,22,0.06)',
+              borderWidth: 2,
+              pointBackgroundColor: made.map(v => v >= 1.0 ? '#fbbf24' : '#f97316'),
+              pointRadius: made.map(v => v >= 1.0 ? 6 : 3),
+              pointHoverRadius: 8,
+              fill: true,
+              tension: 0.4,
+              yAxisID: 'y',
+            },
+            {
+              label: 'League 3P%',
+              data: pct,
+              borderColor: '#a78bfa',
+              backgroundColor: 'transparent',
+              borderWidth: 1.5,
+              borderDash: [4, 4],
+              pointRadius: 2,
+              pointHoverRadius: 5,
+              tension: 0.4,
+              yAxisID: 'y2',
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: true,
+          interaction: { mode: 'index', intersect: false },
+          plugins: {
+            legend: {
+              labels: { color: '#64748b', font: { family: 'DM Mono', size: 10 } }
+            },
+            tooltip: {
+              ...baseTooltip(),
+              callbacks: {
+                label: c => c.datasetIndex === 0
+                  ? ` ${c.parsed.y.toFixed(2)} 3PM avg`
+                  : ` ${c.parsed.y.toFixed(1)}% league 3P%`,
+                afterLabel: c => (c.datasetIndex === 0 && c.parsed.y >= 1.0) ? ' Post-Curry era' : ''
+              }
+            }
+          },
+          scales: {
+            x: {
+              grid: { color: 'rgba(255,255,255,0.04)' },
+              ticks: { color: '#64748b', font: { family: 'DM Mono', size: 10 }, maxRotation: 45 }
+            },
+            y: {
+              position: 'left',
+              grid: { color: 'rgba(255,255,255,0.04)' },
+              ticks: { color: '#f97316', font: { family: 'DM Mono', size: 10 }, callback: v => v.toFixed(2) },
+              min: 0.3
+            },
+            y2: {
+              position: 'right',
+              grid: { drawOnChartArea: false },
+              ticks: { color: '#a78bfa', font: { family: 'DM Mono', size: 10 }, callback: v => v + '%' }
+            }
+          }
+        }
+      });
+    } catch (e) {
+      // Fallback to hardcoded data if API unavailable
+      const fallback = {
         'Epoca1996-97': 0.56, 'Epoca1997-98': 0.41, 'Epoca1998-99': 0.43,
         'Epoca1999-00': 0.44, 'Epoca2000-01': 0.44, 'Epoca2001-02': 0.47,
         'Epoca2002-03': 0.47, 'Epoca2003-04': 0.49, 'Epoca2004-05': 0.52,
@@ -967,12 +1676,9 @@
         'Epoca2017-18': 0.95, 'Epoca2018-19': 1.01, 'Epoca2019-20': 1.11,
         'Epoca2020-21': 1.15
       };
-
-      const labels = Object.keys(trendData).map(s => s.replace('Epoca',''));
-      const values = Object.values(trendData);
-
+      const labels = Object.keys(fallback).map(s => s.replace('Epoca',''));
+      const values = Object.values(fallback);
       const ctx = document.getElementById('trendChart').getContext('2d');
-
       new Chart(ctx, {
         type: 'line',
         data: {
@@ -996,42 +1702,300 @@
           plugins: {
             legend: { display: false },
             tooltip: {
-              backgroundColor: '#0e1118',
-              borderColor: 'rgba(255,255,255,0.1)',
-              borderWidth: 1,
-              titleColor: '#f97316',
-              bodyColor: '#f1f5f9',
+              ...baseTooltip(),
               callbacks: {
-                label: ctx => ` ${ctx.parsed.y.toFixed(2)} 3PM avg`,
-                afterLabel: ctx => ctx.parsed.y >= 1.0 ? ' ★ Post-Curry era' : ''
+                label: c => ` ${c.parsed.y.toFixed(2)} 3PM avg`,
+                afterLabel: c => c.parsed.y >= 1.0 ? ' Post-Curry era' : ''
               }
-            },
-            annotation: {}
+            }
           },
           scales: {
             x: {
               grid: { color: 'rgba(255,255,255,0.04)' },
-              ticks: {
-                color: '#64748b',
-                font: { family: 'DM Mono', size: 10 },
-                maxRotation: 45
-              }
+              ticks: { color: '#64748b', font: { family: 'DM Mono', size: 10 }, maxRotation: 45 }
             },
             y: {
               grid: { color: 'rgba(255,255,255,0.04)' },
-              ticks: {
-                color: '#64748b',
-                font: { family: 'DM Mono', size: 11 },
-                callback: v => v.toFixed(2)
-              },
-              min: 0.3,
+              ticks: { color: '#64748b', font: { family: 'DM Mono', size: 11 }, callback: v => v.toFixed(2) },
+              min: 0.3
             }
           }
         }
       });
+    }
+  }
+
+  // ─── CHAMPIONSHIP PREDICTOR ───
+  let champChartInstance = null;
+
+  async function loadChampionshipPredictor() {
+    const container = document.getElementById('champ-container');
+    const countEl   = document.getElementById('champ-count');
+    const season    = document.getElementById('champ-season-filter').value;
+
+    container.innerHTML = `<div class="loading"><div class="spinner"></div> Running model...</div>`;
+
+    try {
+      let url = '/analytics/championship-predictor';
+      if (season) url += `?season=${encodeURIComponent(season)}`;
+
+      const data = await apiFetch(url);
+      const rows = data.data || [];
+
+      if (!rows.length) {
+        container.innerHTML = `<div class="empty-msg">No predictor data for this selection. Try a different season or All Seasons.</div>`;
+        return;
+      }
+
+      countEl.textContent = `${rows.length} entries`;
+
+      const top = rows.slice(0, 15);
+      const maxScore = Math.max(...top.map(r => +(r.predictor_score || r.vitorias || 0)));
+
+      const tableRows = top.map((r, i) => {
+        const rankClass = i === 0 ? 'r1' : i === 1 ? 'r2' : i === 2 ? 'r3' : '';
+        const score = +(r.predictor_score || r.vitorias || 0);
+        const barW = ((score / maxScore) * 100).toFixed(1);
+        const seasonLabel = (r.season || r.epoca || '').replace('Epoca', '');
+        return `
+          <tr>
+            <td><span class="rank-badge ${rankClass}">${i + 1}</span></td>
+            <td style="font-weight:500">${r.equipa || r.team || '-'}</td>
+            <td style="font-size:11px; color:var(--muted)">${seasonLabel}</td>
+            <td>
+              <div class="score-bar-wrap">
+                <span class="score-cell" style="color:var(--gold)">${score.toFixed ? score.toFixed(1) : score}</span>
+                <div class="score-bar-track">
+                  <div class="score-bar-fill" style="width:${barW}%"></div>
+                </div>
+              </div>
+            </td>
+            <td style="color:var(--success)">${r.vitorias || '-'}</td>
+            <td style="color:#ef4444">${r.derrotas || '-'}</td>
+            <td style="color:var(--accent)">${r.pontos ? (+r.pontos).toFixed(1) : '-'}</td>
+          </tr>
+        `;
+      }).join('');
+
+      container.innerHTML = `
+        <table class="champ-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Team</th>
+              <th>Season</th>
+              <th>Predictor Score</th>
+              <th>W</th>
+              <th>L</th>
+              <th>Avg PTS</th>
+            </tr>
+          </thead>
+          <tbody>${tableRows}</tbody>
+        </table>
+      `;
     } catch (e) {
-      document.getElementById('trendChart').parentElement.innerHTML +=
-        `<div class="error-msg">⚠ Chart data unavailable.</div>`;
+      container.innerHTML = `<div class="error-msg">Championship predictor unavailable. API may be starting up - try in 30s.</div>`;
+    }
+  }
+
+  // ─── PLAYER CAREER SEARCH ───
+  let careerChartInstance = null;
+
+  document.getElementById('player-search-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') loadPlayerCareer();
+  });
+
+  async function loadPlayerCareer() {
+    const name = document.getElementById('player-search-input').value.trim();
+    const container = document.getElementById('career-container');
+
+    if (!name) {
+      container.innerHTML = `<div class="empty-msg">Enter a player name to search.</div>`;
+      return;
+    }
+
+    container.innerHTML = `<div class="loading"><div class="spinner"></div> Searching career data for "${name}"...</div>`;
+
+    try {
+      const data = await apiFetch(`/players/${encodeURIComponent(name)}/career`);
+      const seasons = data.data || data.seasons || [];
+
+      if (!seasons.length) {
+        container.innerHTML = `<div class="empty-msg">No data found for "${name}". Try a different spelling - e.g. "LeBron James", "Kobe Bryant".</div>`;
+        return;
+      }
+
+      const playerName = seasons[0].jogador || name;
+      const totalSeasons = seasons.length;
+      const avgPts = (seasons.reduce((a, s) => a + +(s.pontos || 0), 0) / totalSeasons).toFixed(1);
+      const avgReb = (seasons.reduce((a, s) => a + +(s.rebotes || 0), 0) / totalSeasons).toFixed(1);
+      const avgAst = (seasons.reduce((a, s) => a + +(s.assistencias || 0), 0) / totalSeasons).toFixed(1);
+      const peakPts = Math.max(...seasons.map(s => +(s.pontos || 0))).toFixed(1);
+
+      const labels = seasons.map(s => (s.season || s.epoca || '').replace('Epoca', ''));
+      const ptsData = seasons.map(s => +(s.pontos || 0));
+      const rebData = seasons.map(s => +(s.rebotes || 0));
+      const astData = seasons.map(s => +(s.assistencias || 0));
+
+      container.innerHTML = `
+        <div class="career-result">
+          <div class="career-header">
+            <span class="career-name">${playerName.toUpperCase()}</span>
+            <span class="career-meta">${totalSeasons} season${totalSeasons > 1 ? 's' : ''} · ${seasons[0].equipa || ''}</span>
+          </div>
+          <div class="career-stats-row">
+            <div class="career-stat-box">
+              <span class="career-stat-num">${avgPts}</span>
+              <span class="career-stat-label">Avg PTS</span>
+            </div>
+            <div class="career-stat-box">
+              <span class="career-stat-num" style="color:var(--blue)">${avgReb}</span>
+              <span class="career-stat-label">Avg REB</span>
+            </div>
+            <div class="career-stat-box">
+              <span class="career-stat-num" style="color:var(--purple)">${avgAst}</span>
+              <span class="career-stat-label">Avg AST</span>
+            </div>
+            <div class="career-stat-box">
+              <span class="career-stat-num" style="color:var(--gold)">${peakPts}</span>
+              <span class="career-stat-label">Peak PTS</span>
+            </div>
+            <div class="career-stat-box">
+              <span class="career-stat-num" style="color:var(--success)">${totalSeasons}</span>
+              <span class="career-stat-label">Seasons</span>
+            </div>
+          </div>
+          <div class="chart-container" style="background:var(--bg2)">
+            <p class="chart-title">${playerName} - Career Trajectory</p>
+            <p class="chart-subtitle">Points, Rebounds and Assists per season in the dataset</p>
+            <canvas id="careerChart"></canvas>
+          </div>
+        </div>
+      `;
+
+      if (careerChartInstance) careerChartInstance.destroy();
+
+      const ctx = document.getElementById('careerChart').getContext('2d');
+      careerChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [
+            {
+              label: 'PTS',
+              data: ptsData,
+              borderColor: '#f97316',
+              backgroundColor: 'rgba(249,115,22,0.06)',
+              borderWidth: 2,
+              pointRadius: 4,
+              pointHoverRadius: 7,
+              fill: true,
+              tension: 0.3,
+            },
+            {
+              label: 'REB',
+              data: rebData,
+              borderColor: '#38bdf8',
+              backgroundColor: 'transparent',
+              borderWidth: 1.5,
+              pointRadius: 3,
+              pointHoverRadius: 6,
+              tension: 0.3,
+            },
+            {
+              label: 'AST',
+              data: astData,
+              borderColor: '#a78bfa',
+              backgroundColor: 'transparent',
+              borderWidth: 1.5,
+              borderDash: [5, 3],
+              pointRadius: 3,
+              pointHoverRadius: 6,
+              tension: 0.3,
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: true,
+          interaction: { mode: 'index', intersect: false },
+          plugins: {
+            legend: {
+              labels: { color: '#64748b', font: { family: 'DM Mono', size: 10 } }
+            },
+            tooltip: {
+              ...baseTooltip(),
+              callbacks: {
+                label: c => ` ${c.dataset.label}: ${c.parsed.y.toFixed(1)}`
+              }
+            }
+          },
+          scales: baseScales(v => v.toFixed(1))
+        }
+      });
+
+    } catch (e) {
+      container.innerHTML = `<div class="error-msg">Could not load career data for "${name}". API may be starting up - try in 30s.</div>`;
+    }
+  }
+
+  // ─── YOUNG STARS ───
+  async function loadYoungStars() {
+    const container = document.getElementById('young-stars-container');
+    const countEl   = document.getElementById('young-count');
+    const season    = document.getElementById('young-season-filter').value;
+    const limit     = parseInt(document.getElementById('young-limit-filter').value);
+
+    container.innerHTML = `<div class="loading"><div class="spinner"></div> Loading young stars...</div>`;
+
+    try {
+      let url = '/players/young-stars';
+      if (season) url += `?season=${encodeURIComponent(season)}`;
+
+      const data = await apiFetch(url);
+      let players = (data.data || []).slice(0, limit);
+
+      if (!players.length) {
+        container.innerHTML = `<div class="empty-msg">No young stars data for this selection.</div>`;
+        return;
+      }
+
+      countEl.textContent = `${players.length} players`;
+
+      const cards = players.map((p, i) => {
+        const delay = (i * 0.05).toFixed(2);
+        const seasonLabel = (p.season || p.epoca || '').replace('Epoca', '');
+        return `
+          <div class="star-card" style="animation-delay:${delay}s">
+            <span class="star-rank">#${i + 1} · Age ${p.idade || '-'}</span>
+            <span class="star-name">${(p.jogador || '').toUpperCase()}</span>
+            <span class="star-meta">${p.equipa || '-'} · ${seasonLabel}</span>
+            <div class="star-stats">
+              <div class="star-stat">
+                <span class="star-stat-val">${(+(p.pontos || 0)).toFixed(1)}</span>
+                <span class="star-stat-key">PTS</span>
+              </div>
+              <div class="star-stat">
+                <span class="star-stat-val" style="color:var(--blue)">${(+(p.rebotes || 0)).toFixed(1)}</span>
+                <span class="star-stat-key">REB</span>
+              </div>
+              <div class="star-stat">
+                <span class="star-stat-val" style="color:var(--accent)">${(+(p.assistencias || 0)).toFixed(1)}</span>
+                <span class="star-stat-key">AST</span>
+              </div>
+              <div class="star-stat">
+                <span class="star-stat-val" style="color:var(--gold)">${(+(p.ponto_fantasia || 0)).toFixed(1)}</span>
+                <span class="star-stat-key">FAN</span>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      container.innerHTML = `<div class="young-stars-grid">${cards}</div>`;
+
+    } catch (e) {
+      container.innerHTML = `<div class="error-msg">Young stars data unavailable. API may be starting up.</div>`;
     }
   }
 
@@ -1041,7 +2005,10 @@
       loadOverview(),
       loadFilters(),
       loadTopScorers(),
-      loadTrendChart()
+      loadEraAnalysis(),
+      loadTrendChart(),
+      loadChampionshipPredictor(),
+      loadYoungStars(),
     ]);
   })();
 </script>

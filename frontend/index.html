@@ -1463,11 +1463,11 @@
 
   // ─── ERA ANALYSIS ───
   const ERA_COLORS = {
-    'Jordan Dynasty':    { color: '#fbbf24', class: 'era-jordan'   },
-    'Post-Jordan Stars': { color: '#38bdf8', class: 'era-stars'    },
-    'Analytics Era':     { color: '#a78bfa', class: 'era-analytics' },
-    'Warriors Dynasty':  { color: '#22c55e', class: 'era-warriors' },
-    'Modern Era':        { color: '#f97316', class: 'era-modern'   },
+    '1996-2001 Jordan Era':       { color: '#fbbf24', class: 'era-jordan'   },
+    '2001-2006 Post-Jordan':      { color: '#38bdf8', class: 'era-stars'    },
+    '2006-2011 LeBron Rise':      { color: '#a78bfa', class: 'era-analytics' },
+    '2011-2016 Heat and Warriors':{ color: '#22c55e', class: 'era-warriors' },
+    '2016-2021 Modern Era':       { color: '#f97316', class: 'era-modern'   },
   };
 
   let eraChartInstance = null;
@@ -1492,19 +1492,23 @@
             <p class="era-seasons">${era.seasons_covered || ''}</p>
             <div class="era-stat-row">
               <span class="era-stat-key">Avg PTS</span>
-              <span class="era-stat-val" style="color:${cfg.color}">${(+era.avg_pts).toFixed(1)}</span>
+              <span class="era-stat-val" style="color:${cfg.color}">${(+era.avg_points).toFixed(1)}</span>
             </div>
             <div class="era-stat-row">
               <span class="era-stat-key">Avg REB</span>
-              <span class="era-stat-val">${(+era.avg_reb).toFixed(1)}</span>
+              <span class="era-stat-val">${(+era.avg_rebounds).toFixed(1)}</span>
             </div>
             <div class="era-stat-row">
               <span class="era-stat-key">Avg AST</span>
-              <span class="era-stat-val">${(+era.avg_ast).toFixed(1)}</span>
+              <span class="era-stat-val">${(+era.avg_assists).toFixed(1)}</span>
             </div>
             <div class="era-stat-row">
               <span class="era-stat-key">Avg 3PM</span>
               <span class="era-stat-val">${(+era.avg_3pm).toFixed(2)}</span>
+            </div>
+            <div class="era-stat-row">
+              <span class="era-stat-key">FAN Pts</span>
+              <span class="era-stat-val" style="color:var(--muted2)">${(+era.avg_fantasy).toFixed(1)}</span>
             </div>
           </div>
         `;
@@ -1514,9 +1518,9 @@
 
       // Build era chart
       const labels = eras.map(e => e.era);
-      const ptsVals = eras.map(e => +(+era_lookup(eras, e.era, 'avg_pts')).toFixed(1));
-      const rebVals = eras.map(e => +(+era_lookup(eras, e.era, 'avg_reb')).toFixed(1));
-      const astVals = eras.map(e => +(+era_lookup(eras, e.era, 'avg_ast')).toFixed(1));
+      const ptsVals = eras.map(e => +(+era_lookup(eras, e.era, 'avg_points')).toFixed(1));
+      const rebVals = eras.map(e => +(+era_lookup(eras, e.era, 'avg_rebounds')).toFixed(1));
+      const astVals = eras.map(e => +(+era_lookup(eras, e.era, 'avg_assists')).toFixed(1));
       const bgColors = eras.map(e => (ERA_COLORS[e.era] || {color:'#f97316'}).color + '99');
       const bdColors = eras.map(e => (ERA_COLORS[e.era] || {color:'#f97316'}).color);
 
@@ -1754,7 +1758,8 @@
 
       const tableRows = top.map((r, i) => {
         const rankClass = i === 0 ? 'r1' : i === 1 ? 'r2' : i === 2 ? 'r3' : '';
-        const score = +(r.predictor_score || r.vitorias || 0);
+        const score = +(r.championship_score || r.predictor_score || r.vitorias || 0);
+        const rank  = r.predicted_rank || i + 1;
         const barW = ((score / maxScore) * 100).toFixed(1);
         const seasonLabel = (r.season || r.epoca || '').replace('Epoca', '');
         return `
@@ -1770,9 +1775,9 @@
                 </div>
               </div>
             </td>
-            <td style="color:var(--success)">${r.vitorias || '-'}</td>
-            <td style="color:#ef4444">${r.derrotas || '-'}</td>
-            <td style="color:var(--accent)">${r.pontos ? (+r.pontos).toFixed(1) : '-'}</td>
+            <td style="color:var(--success)">${r.avg_plus_minus !== undefined ? (+(r.avg_plus_minus)).toFixed(2) : (r.vitorias || '-')}</td>
+            <td style="color:#ef4444">${r.predicted_rank || (r.derrotas || '-')}</td>
+            <td style="color:var(--accent)">${r.avg_points ? (+r.avg_points).toFixed(1) : (r.pontos ? (+r.pontos).toFixed(1) : '-')}</td>
           </tr>
         `;
       }).join('');
@@ -1784,9 +1789,9 @@
               <th>#</th>
               <th>Team</th>
               <th>Season</th>
-              <th>Predictor Score</th>
-              <th>W</th>
-              <th>L</th>
+              <th>Championship Score</th>
+              <th>+/-</th>
+              <th>Rank</th>
               <th>Avg PTS</th>
             </tr>
           </thead>
@@ -1817,7 +1822,7 @@
     container.innerHTML = `<div class="loading"><div class="spinner"></div> Searching career data for "${name}"...</div>`;
 
     try {
-      const data = await apiFetch(`/players/${encodeURIComponent(name)}/career`);
+      const data = await apiFetch(`/analytics/players/${encodeURIComponent(name)}/career`);
       const seasons = data.data || data.seasons || [];
 
       if (!seasons.length) {
@@ -1935,7 +1940,7 @@
       });
 
     } catch (e) {
-      container.innerHTML = `<div class="error-msg">Could not load career data for "${name}". API may be starting up - try in 30s.</div>`;
+      container.innerHTML = `<div class="error-msg">Player not found: "${name}". Check the spelling or try another name - e.g. "LeBron James", "Kobe Bryant", "Tim Duncan".</div>`;
     }
   }
 
@@ -1949,9 +1954,8 @@
     container.innerHTML = `<div class="loading"><div class="spinner"></div> Loading young stars...</div>`;
 
     try {
-      let url = '/players/young-stars';
+      let url = '/analytics/young-stars';
       if (season) url += `?season=${encodeURIComponent(season)}`;
-
       const data = await apiFetch(url);
       let players = (data.data || []).slice(0, limit);
 

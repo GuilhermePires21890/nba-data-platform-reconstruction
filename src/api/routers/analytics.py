@@ -238,81 +238,122 @@ def get_player_career(request: Request, player_name: str):
 def get_all_time_records(request: Request):
     """
     Sprint 18 - All-Time Records endpoint.
-    Returns the single-season record holder for 8 statistical categories
+    Returns single-season record holders for 8 statistical categories
     across all 25 seasons (1996-2021), with full player/team/season context.
-    """
-    query = """
-        WITH ranked AS (
-            SELECT
-                jogador                                         AS player,
-                equipa                                         AS team,
-                season,
-                ROUND(pontos, 1)                               AS points,
-                ROUND(rebotes, 1)                              AS rebounds,
-                ROUND(assistencias, 1)                         AS assists,
-                ROUND(ponto_fantasia, 1)                       AS fantasy_points,
-                ROUND(mais_ou_menos, 1)                        AS plus_minus,
-                ROUND(porcentagem_de_meta_de_campo, 1)         AS fg_pct,
-                ROUND(golos_de_campo_de_3_pontos_feitos, 1)    AS threes_made,
-                triplos_duplos,
-                -- Window function ranks for each category
-                RANK() OVER (ORDER BY pontos DESC)             AS rank_pts,
-                RANK() OVER (ORDER BY rebotes DESC)            AS rank_reb,
-                RANK() OVER (ORDER BY assistencias DESC)       AS rank_ast,
-                RANK() OVER (ORDER BY ponto_fantasia DESC)     AS rank_fan,
-                RANK() OVER (ORDER BY mais_ou_menos DESC)      AS rank_pm,
-                RANK() OVER (ORDER BY porcentagem_de_meta_de_campo DESC
-                    ) FILTER (WHERE jogos_jogados >= 50)       AS rank_fg,
-                RANK() OVER (ORDER BY golos_de_campo_de_3_pontos_feitos DESC
-                    )                                          AS rank_3pm,
-                RANK() OVER (ORDER BY triplos_duplos DESC)     AS rank_td
-            FROM player_stats
-            WHERE jogos_jogados >= 50
-        )
-        SELECT
-            MAX(CASE WHEN rank_pts = 1 THEN
-                json_build_object('player', player, 'team', team, 'season',
-                    REPLACE(season, 'Epoca', ''), 'value', points, 'label', 'Highest PPG Season')
-            END) AS highest_scoring_season,
-            MAX(CASE WHEN rank_reb = 1 THEN
-                json_build_object('player', player, 'team', team, 'season',
-                    REPLACE(season, 'Epoca', ''), 'value', rebounds, 'label', 'Most Rebounds Per Game')
-            END) AS most_rebounds_season,
-            MAX(CASE WHEN rank_ast = 1 THEN
-                json_build_object('player', player, 'team', team, 'season',
-                    REPLACE(season, 'Epoca', ''), 'value', assists, 'label', 'Most Assists Per Game')
-            END) AS most_assists_season,
-            MAX(CASE WHEN rank_fan = 1 THEN
-                json_build_object('player', player, 'team', team, 'season',
-                    REPLACE(season, 'Epoca', ''), 'value', fantasy_points, 'label', 'Highest Fantasy Season')
-            END) AS highest_fantasy_season,
-            MAX(CASE WHEN rank_pm = 1 THEN
-                json_build_object('player', player, 'team', team, 'season',
-                    REPLACE(season, 'Epoca', ''), 'value', plus_minus, 'label', 'Best Plus/Minus Season')
-            END) AS best_plus_minus_season,
-            MAX(CASE WHEN rank_fg = 1 THEN
-                json_build_object('player', player, 'team', team, 'season',
-                    REPLACE(season, 'Epoca', ''), 'value', fg_pct, 'label', 'Best FG% Season (min 50 GP)')
-            END) AS best_fg_pct_season,
-            MAX(CASE WHEN rank_3pm = 1 THEN
-                json_build_object('player', player, 'team', team, 'season',
-                    REPLACE(season, 'Epoca', ''), 'value', threes_made, 'label', 'Most 3PM Per Game')
-            END) AS most_3pm_season,
-            MAX(CASE WHEN rank_td = 1 THEN
-                json_build_object('player', player, 'team', team, 'season',
-                    REPLACE(season, 'Epoca', ''), 'value', triplos_duplos, 'label', 'Most Triple-Doubles')
-            END) AS most_triple_doubles_season
-        FROM ranked
+    Uses simple subqueries for maximum PostgreSQL compatibility.
     """
 
+    RECORD_QUERIES = {
+        "highest_scoring_season": {
+            "label": "Highest PPG Season",
+            "query": """
+                SELECT jogador AS player, equipa AS team,
+                       REPLACE(season, 'Epoca', '') AS season,
+                       ROUND(pontos, 1) AS value
+                FROM player_stats
+                WHERE jogos_jogados >= 50
+                ORDER BY pontos DESC LIMIT 1
+            """
+        },
+        "most_rebounds_season": {
+            "label": "Most Rebounds Per Game",
+            "query": """
+                SELECT jogador AS player, equipa AS team,
+                       REPLACE(season, 'Epoca', '') AS season,
+                       ROUND(rebotes, 1) AS value
+                FROM player_stats
+                WHERE jogos_jogados >= 50
+                ORDER BY rebotes DESC LIMIT 1
+            """
+        },
+        "most_assists_season": {
+            "label": "Most Assists Per Game",
+            "query": """
+                SELECT jogador AS player, equipa AS team,
+                       REPLACE(season, 'Epoca', '') AS season,
+                       ROUND(assistencias, 1) AS value
+                FROM player_stats
+                WHERE jogos_jogados >= 50
+                ORDER BY assistencias DESC LIMIT 1
+            """
+        },
+        "highest_fantasy_season": {
+            "label": "Highest Fantasy Season",
+            "query": """
+                SELECT jogador AS player, equipa AS team,
+                       REPLACE(season, 'Epoca', '') AS season,
+                       ROUND(ponto_fantasia, 1) AS value
+                FROM player_stats
+                WHERE jogos_jogados >= 50
+                ORDER BY ponto_fantasia DESC LIMIT 1
+            """
+        },
+        "best_plus_minus_season": {
+            "label": "Best Plus/Minus Season",
+            "query": """
+                SELECT jogador AS player, equipa AS team,
+                       REPLACE(season, 'Epoca', '') AS season,
+                       ROUND(mais_ou_menos, 1) AS value
+                FROM player_stats
+                WHERE jogos_jogados >= 50
+                ORDER BY mais_ou_menos DESC LIMIT 1
+            """
+        },
+        "best_fg_pct_season": {
+            "label": "Best FG% Season (min 50 GP)",
+            "query": """
+                SELECT jogador AS player, equipa AS team,
+                       REPLACE(season, 'Epoca', '') AS season,
+                       ROUND(porcentagem_de_meta_de_campo, 1) AS value
+                FROM player_stats
+                WHERE jogos_jogados >= 50
+                  AND porcentagem_de_meta_de_campo IS NOT NULL
+                  AND porcentagem_de_meta_de_campo > 0
+                ORDER BY porcentagem_de_meta_de_campo DESC LIMIT 1
+            """
+        },
+        "most_3pm_season": {
+            "label": "Most 3-Pointers Made Per Game",
+            "query": """
+                SELECT jogador AS player, equipa AS team,
+                       REPLACE(season, 'Epoca', '') AS season,
+                       ROUND(golos_de_campo_de_3_pontos_feitos, 1) AS value
+                FROM player_stats
+                WHERE jogos_jogados >= 50
+                ORDER BY golos_de_campo_de_3_pontos_feitos DESC LIMIT 1
+            """
+        },
+        "most_triple_doubles_season": {
+            "label": "Most Triple-Doubles in a Season",
+            "query": """
+                SELECT jogador AS player, equipa AS team,
+                       REPLACE(season, 'Epoca', '') AS season,
+                       triplos_duplos AS value
+                FROM player_stats
+                WHERE jogos_jogados >= 50
+                ORDER BY triplos_duplos DESC LIMIT 1
+            """
+        },
+    }
+
+    records = {}
     with get_connection() as conn:
         with conn.cursor() as cur:
-            cur.execute(query)
-            result = cur.fetchone()
+            for record_key, config in RECORD_QUERIES.items():
+                cur.execute(config["query"])
+                row = cur.fetchone()
+                if row:
+                    records[record_key] = {
+                        "player": row["player"],
+                        "team": row["team"],
+                        "season": row["season"],
+                        "value": float(row["value"]) if row["value"] is not None else None,
+                        "label": config["label"]
+                    }
 
     return {
-        "records": result,
-        "total_records": 8,
+        "records": records,
+        "total_records": len(records),
         "seasons_covered": 25,
         "description": "Single-season record holders across all 25 NBA seasons (1996-2021)"
     }

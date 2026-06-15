@@ -1000,6 +1000,83 @@
       border-radius: 2px;
     }
 
+    /* ─── ALL-TIME RECORDS ─── */
+    .records-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .record-card {
+      background: var(--bg2);
+      padding: 1.5rem;
+      transition: background 0.2s;
+      position: relative;
+      overflow: hidden;
+      opacity: 0;
+      animation: fadeUp 0.4s forwards;
+    }
+
+    .record-card:hover { background: var(--bg3); }
+
+    .record-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+    }
+
+    .record-card.cat-pts::before   { background: var(--accent); }
+    .record-card.cat-reb::before   { background: var(--blue); }
+    .record-card.cat-ast::before   { background: var(--purple); }
+    .record-card.cat-fan::before   { background: var(--gold); }
+    .record-card.cat-pm::before    { background: var(--success); }
+    .record-card.cat-fg::before    { background: var(--muted2); }
+    .record-card.cat-3pm::before   { background: #f43f5e; }
+    .record-card.cat-td::before    { background: #06b6d4; }
+
+    .record-category {
+      font-size: 10px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 0.75rem;
+    }
+
+    .record-value {
+      font-family: var(--display);
+      font-size: 2.8rem;
+      line-height: 1;
+      margin-bottom: 0.5rem;
+    }
+
+    .record-value.cat-pts   { color: var(--accent); }
+    .record-value.cat-reb   { color: var(--blue); }
+    .record-value.cat-ast   { color: var(--purple); }
+    .record-value.cat-fan   { color: var(--gold); }
+    .record-value.cat-pm    { color: var(--success); }
+    .record-value.cat-fg    { color: var(--muted2); }
+    .record-value.cat-3pm   { color: #f43f5e; }
+    .record-value.cat-td    { color: #06b6d4; }
+
+    .record-player {
+      font-family: var(--display);
+      font-size: 1.1rem;
+      letter-spacing: 0.04em;
+      color: var(--text);
+      margin-bottom: 0.25rem;
+    }
+
+    .record-context {
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+    }
+
     /* ─── SCROLLBAR ─── */
     ::-webkit-scrollbar { width: 4px; }
     ::-webkit-scrollbar-track { background: var(--bg); }
@@ -1249,6 +1326,19 @@
     <div class="loading"><div class="spinner"></div> Loading young stars...</div>
   </div>
 </section>
+
+<!-- ALL-TIME RECORDS -->
+<section>
+  <div class="section-header">
+    <h2 class="section-title">ALL-TIME RECORDS</h2>
+    <span class="section-tag-gold">25 Seasons · Single Season Bests</span>
+  </div>
+  <div id="records-container">
+    <div class="loading"><div class="spinner"></div> Loading records...</div>
+  </div>
+</section>
+
+<hr class="section-divider" />
 
 <!-- FOOTER -->
 <footer>
@@ -2042,6 +2132,49 @@
     }
   }
 
+  // ─── ALL-TIME RECORDS ───
+  const RECORD_META = {
+    highest_scoring_season:    { cat: 'pts', unit: 'PPG',  icon: '🏀' },
+    most_rebounds_season:      { cat: 'reb', unit: 'RPG',  icon: '💪' },
+    most_assists_season:       { cat: 'ast', unit: 'APG',  icon: '🎯' },
+    highest_fantasy_season:    { cat: 'fan', unit: 'FAN',  icon: '⭐' },
+    best_plus_minus_season:    { cat: 'pm',  unit: '+/-',  icon: '📈' },
+    best_fg_pct_season:        { cat: 'fg',  unit: 'FG%',  icon: '🎳' },
+    most_3pm_season:           { cat: '3pm', unit: '3PM',  icon: '🔥' },
+    most_triple_doubles_season:{ cat: 'td',  unit: 'TD',   icon: '🏆' },
+  };
+
+  async function loadAllTimeRecords() {
+    const container = document.getElementById('records-container');
+    try {
+      const data = await apiFetch('/analytics/all-time-records');
+      const records = data.records || {};
+
+      const cards = Object.entries(records).map(([key, rec], i) => {
+        if (!rec) return '';
+        const meta = RECORD_META[key] || { cat: 'pts', unit: '' };
+        const delay = (i * 0.06).toFixed(2);
+        const seasonClean = (rec.season || '').replace('Epoca', '');
+        const val = typeof rec.value === 'number'
+          ? (Number.isInteger(rec.value) ? rec.value : rec.value.toFixed(1))
+          : rec.value;
+
+        return `
+          <div class="record-card cat-${meta.cat}" style="animation-delay:${delay}s">
+            <p class="record-category">${rec.label || key.replace(/_/g,' ').toUpperCase()}</p>
+            <p class="record-value cat-${meta.cat}">${val}<span style="font-size:1rem; color:var(--muted); margin-left:4px">${meta.unit}</span></p>
+            <p class="record-player">${(rec.player || '').toUpperCase()}</p>
+            <p class="record-context">${rec.team || ''} · ${seasonClean}</p>
+          </div>
+        `;
+      }).join('');
+
+      container.innerHTML = `<div class="records-grid">${cards}</div>`;
+    } catch (e) {
+      container.innerHTML = `<div class="error-msg">All-time records unavailable. API may be starting up.</div>`;
+    }
+  }
+
   // ─── INIT ───
   (async () => {
     await Promise.all([
@@ -2052,6 +2185,7 @@
       loadTrendChart(),
       loadChampionshipPredictor(),
       loadYoungStars(),
+      loadAllTimeRecords(),
     ]);
   })();
 </script>

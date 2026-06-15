@@ -304,12 +304,12 @@ def get_all_time_records(request: Request):
             "query": """
                 SELECT jogador AS player, equipa AS team,
                        REPLACE(season, 'Epoca', '') AS season,
-                       ROUND(porcentagem_de_meta_de_campo, 1) AS value
+                       ROUND(percentagem_de_meta_de_campo, 1) AS value
                 FROM player_stats
                 WHERE jogos_jogados >= 50
-                  AND porcentagem_de_meta_de_campo IS NOT NULL
-                  AND porcentagem_de_meta_de_campo > 0
-                ORDER BY porcentagem_de_meta_de_campo DESC LIMIT 1
+                  AND percentagem_de_meta_de_campo IS NOT NULL
+                  AND percentagem_de_meta_de_campo > 0
+                ORDER BY percentagem_de_meta_de_campo DESC LIMIT 1
             """
         },
         "most_3pm_season": {

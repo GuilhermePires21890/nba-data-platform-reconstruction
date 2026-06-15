@@ -15,8 +15,6 @@ def get_championship_predictor(
     season: str = Query(None, description="Filter by season (e.g. Epoca2020-21)"),
     limit: int = Query(30, le=30),
 ):
-    # FIX BUG-003: when no season filter, return top predicted_rank=1 per season
-    # so "All Seasons" shows 25 champions, not just 2020-21
     query = """
         WITH roster_stats AS (
             SELECT
@@ -61,13 +59,11 @@ def get_championship_predictor(
     params = []
 
     if season:
-        # specific season: return all teams ranked
         query += " AND season = %s"
         params.append(season)
         query += " ORDER BY predicted_rank ASC LIMIT %s"
         params.append(limit)
     else:
-        # all seasons: return predicted champion (rank 1) per season
         query += " AND predicted_rank = 1"
         query += " ORDER BY season DESC LIMIT %s"
         params.append(limit)
@@ -152,16 +148,10 @@ def get_young_stars(
     season: str = Query(None),
     limit: int = Query(25, le=50),
 ):
-    # FIX BUG-004: when no season filter, return best season per player (no duplicates)
-    # when season filter active, return all players in that season
     if season:
         query = """
             SELECT
-                jogador,
-                equipa,
-                season,
-                idade,
-                jogos_jogados,
+                jogador, equipa, season, idade, jogos_jogados,
                 ROUND(pontos, 1)            AS points,
                 ROUND(assistencias, 1)      AS assists,
                 ROUND(rebotes, 1)           AS rebounds,
@@ -176,15 +166,10 @@ def get_young_stars(
         """
         params = [season, limit]
     else:
-        # Deduplicate: best fantasy season per player
         query = """
             WITH best_season AS (
                 SELECT DISTINCT ON (jogador)
-                    jogador,
-                    equipa,
-                    season,
-                    idade,
-                    jogos_jogados,
+                    jogador, equipa, season, idade, jogos_jogados,
                     ROUND(pontos, 1)            AS points,
                     ROUND(assistencias, 1)      AS assists,
                     ROUND(rebotes, 1)           AS rebounds,
@@ -211,16 +196,10 @@ def get_young_stars(
 
 @router.get("/players/{player_name}/career")
 @limiter.limit("30/minute")
-def get_player_career(
-    request: Request,
-    player_name: str,
-):
+def get_player_career(request: Request, player_name: str):
     query = """
         SELECT
-            season,
-            equipa,
-            idade,
-            jogos_jogados,
+            season, equipa, idade, jogos_jogados,
             ROUND(pontos, 1)                                    AS points,
             ROUND(assistencias, 1)                              AS assists,
             ROUND(rebotes, 1)                                   AS rebounds,
@@ -242,7 +221,6 @@ def get_player_career(
     if not results:
         return {"data": [], "count": 0, "player": player_name, "seasons_played": 0}
 
-    # FIX BUG-005: collect all unique teams for header display
     teams = list(dict.fromkeys(r["equipa"] for r in results))
     teams_display = " / ".join(teams) if len(teams) <= 3 else f"{teams[0]} / {teams[1]} / +{len(teams)-2} more"
 
@@ -258,16 +236,73 @@ def get_player_career(
 @router.get("/all-time-records")
 @limiter.limit("30/minute")
 def get_all_time_records(request: Request):
-    # Sprint 18 placeholder - returns structured records from 25 seasons
+    """
+    Sprint 18 - All-Time Records endpoint.
+    Returns the single-season record holder for 8 statistical categories
+    across all 25 seasons (1996-2021), with full player/team/season context.
+    """
     query = """
+        WITH ranked AS (
+            SELECT
+                jogador                                         AS player,
+                equipa                                         AS team,
+                season,
+                ROUND(pontos, 1)                               AS points,
+                ROUND(rebotes, 1)                              AS rebounds,
+                ROUND(assistencias, 1)                         AS assists,
+                ROUND(ponto_fantasia, 1)                       AS fantasy_points,
+                ROUND(mais_ou_menos, 1)                        AS plus_minus,
+                ROUND(porcentagem_de_meta_de_campo, 1)         AS fg_pct,
+                ROUND(golos_de_campo_de_3_pontos_feitos, 1)    AS threes_made,
+                triplos_duplos,
+                -- Window function ranks for each category
+                RANK() OVER (ORDER BY pontos DESC)             AS rank_pts,
+                RANK() OVER (ORDER BY rebotes DESC)            AS rank_reb,
+                RANK() OVER (ORDER BY assistencias DESC)       AS rank_ast,
+                RANK() OVER (ORDER BY ponto_fantasia DESC)     AS rank_fan,
+                RANK() OVER (ORDER BY mais_ou_menos DESC)      AS rank_pm,
+                RANK() OVER (ORDER BY porcentagem_de_meta_de_campo DESC
+                    ) FILTER (WHERE jogos_jogados >= 50)       AS rank_fg,
+                RANK() OVER (ORDER BY golos_de_campo_de_3_pontos_feitos DESC
+                    )                                          AS rank_3pm,
+                RANK() OVER (ORDER BY triplos_duplos DESC)     AS rank_td
+            FROM player_stats
+            WHERE jogos_jogados >= 50
+        )
         SELECT
-            MAX(pontos)             AS highest_ppg,
-            MAX(rebotes)            AS highest_rpg,
-            MAX(assistencias)       AS highest_apg,
-            MAX(ponto_fantasia)     AS highest_fantasy,
-            MAX(triplos_duplos)     AS most_triple_doubles
-        FROM player_stats
-        WHERE jogos_jogados >= 50
+            MAX(CASE WHEN rank_pts = 1 THEN
+                json_build_object('player', player, 'team', team, 'season',
+                    REPLACE(season, 'Epoca', ''), 'value', points, 'label', 'Highest PPG Season')
+            END) AS highest_scoring_season,
+            MAX(CASE WHEN rank_reb = 1 THEN
+                json_build_object('player', player, 'team', team, 'season',
+                    REPLACE(season, 'Epoca', ''), 'value', rebounds, 'label', 'Most Rebounds Per Game')
+            END) AS most_rebounds_season,
+            MAX(CASE WHEN rank_ast = 1 THEN
+                json_build_object('player', player, 'team', team, 'season',
+                    REPLACE(season, 'Epoca', ''), 'value', assists, 'label', 'Most Assists Per Game')
+            END) AS most_assists_season,
+            MAX(CASE WHEN rank_fan = 1 THEN
+                json_build_object('player', player, 'team', team, 'season',
+                    REPLACE(season, 'Epoca', ''), 'value', fantasy_points, 'label', 'Highest Fantasy Season')
+            END) AS highest_fantasy_season,
+            MAX(CASE WHEN rank_pm = 1 THEN
+                json_build_object('player', player, 'team', team, 'season',
+                    REPLACE(season, 'Epoca', ''), 'value', plus_minus, 'label', 'Best Plus/Minus Season')
+            END) AS best_plus_minus_season,
+            MAX(CASE WHEN rank_fg = 1 THEN
+                json_build_object('player', player, 'team', team, 'season',
+                    REPLACE(season, 'Epoca', ''), 'value', fg_pct, 'label', 'Best FG% Season (min 50 GP)')
+            END) AS best_fg_pct_season,
+            MAX(CASE WHEN rank_3pm = 1 THEN
+                json_build_object('player', player, 'team', team, 'season',
+                    REPLACE(season, 'Epoca', ''), 'value', threes_made, 'label', 'Most 3PM Per Game')
+            END) AS most_3pm_season,
+            MAX(CASE WHEN rank_td = 1 THEN
+                json_build_object('player', player, 'team', team, 'season',
+                    REPLACE(season, 'Epoca', ''), 'value', triplos_duplos, 'label', 'Most Triple-Doubles')
+            END) AS most_triple_doubles_season
+        FROM ranked
     """
 
     with get_connection() as conn:
@@ -275,4 +310,9 @@ def get_all_time_records(request: Request):
             cur.execute(query)
             result = cur.fetchone()
 
-    return {"records": result}
+    return {
+        "records": result,
+        "total_records": 8,
+        "seasons_covered": 25,
+        "description": "Single-season record holders across all 25 NBA seasons (1996-2021)"
+    }

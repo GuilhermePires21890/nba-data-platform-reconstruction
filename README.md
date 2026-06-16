@@ -194,6 +194,7 @@ The model is **16x more accurate than a random baseline** - random prediction = 
 | Analytics - 3-Point Revolution | https://nba-data-platform-api.onrender.com/analytics/3point-revolution |
 | Analytics - Young Stars | https://nba-data-platform-api.onrender.com/analytics/young-stars |
 | Player Career | https://nba-data-platform-api.onrender.com/analytics/players/{name}/career |
+| All-Time Records | https://nba-data-platform-api.onrender.com/analytics/all-time-records |
 
 > Free tier - cold start may take 30-60 seconds after inactivity. The frontend shows a notice and auto-hides it once the API responds.
 
@@ -208,6 +209,7 @@ The model is **16x more accurate than a random baseline** - random prediction = 
 | Championship Predictor | `/analytics/championship-predictor` | ML model ranking across 25 seasons |
 | Player Career | `/analytics/players/{name}/career` | Career trajectory line chart per player |
 | Young Stars | `/analytics/young-stars` | Best U25 seasons, deduplicated per player |
+| All-Time Records | /analytics/all-time-records | 8 single-season record holders with full context |
 
 ---
 

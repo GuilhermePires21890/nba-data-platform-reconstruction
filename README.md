@@ -50,7 +50,7 @@ I rebuilt the original C# scraper pipeline into a modern Python stack - not beca
 
 The platform covers the full engineering surface: ETL pipeline, relational database, REST API with rate limiting and security headers, CI/CD with automated testing, cloud deployment on Supabase and Render, and an interactive frontend with 7 analytics sections powered by live API calls.
 
-Every technical decision is documented as an ADR. Every sprint is tracked in the CHANGELOG. The Championship Predictor model - a weighted scoring system backtested across 25 seasons - runs 16x better than random baseline. The QA suite covers 43 pytest tests and 78 Gherkin scenarios.
+Every technical decision is documented as an ADR. Every sprint is tracked in the CHANGELOG. The Championship Predictor model - a weighted scoring system backtested across 25 seasons - runs 16x better than random baseline. The QA suite covers 66 pytest tests and 78 Gherkin scenarios.
 
 The engineering story is the point. The NBA data is the vehicle.
 
@@ -244,7 +244,7 @@ The platform includes a layered QA strategy covering transformation logic, API c
 | Data integrity tests | Record counts, season coverage, null checks and statistical value ranges |
 | CI health checks | PostgreSQL service startup, FastAPI startup and endpoint availability |
 
-**Current test inventory:** 43 pytest tests across transformation, API contract, schema and data integrity coverage.
+**Current test inventory:** 66 pytest tests across Health, Root, Seasons, Teams, TopScorers, Analytics, AllTimeRecords and Players coverage.
 
 > Data integrity tests require database access and are intentionally separated from the isolated CI test subset.
 

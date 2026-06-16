@@ -395,4 +395,5 @@ class TestPlayersEndpoint:
         assert r.status_code == 200
         data = r.json()["data"]
         assert len(data) > 0
-        assert all(p["team"] == "LAL" for p in data)
+        # /players/ uses SELECT * - returns raw DB column names (equipa, not team)
+        assert all(p["equipa"] == "LAL" for p in data)

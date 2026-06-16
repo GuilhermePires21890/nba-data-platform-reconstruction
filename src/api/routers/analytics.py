@@ -50,7 +50,7 @@ def get_championship_predictor(
                 ) AS predicted_rank
             FROM roster_stats
         )
-        SELECT season, equipa, championship_score,
+        SELECT season, equipa AS team, championship_score,
                avg_plus_minus, avg_fantasy, avg_points,
                avg_assists, avg_rebounds, predicted_rank
         FROM scored
@@ -151,7 +151,7 @@ def get_young_stars(
     if season:
         query = """
             SELECT
-                jogador, equipa, season, idade, jogos_jogados,
+                jogador AS player, equipa AS team, season, idade AS age, jogos_jogados,
                 ROUND(pontos, 1)            AS points,
                 ROUND(assistencias, 1)      AS assists,
                 ROUND(rebotes, 1)           AS rebounds,
@@ -169,7 +169,7 @@ def get_young_stars(
         query = """
             WITH best_season AS (
                 SELECT DISTINCT ON (jogador)
-                    jogador, equipa, season, idade, jogos_jogados,
+                    jogador AS player, equipa AS team, season, idade AS age, jogos_jogados,
                     ROUND(pontos, 1)            AS points,
                     ROUND(assistencias, 1)      AS assists,
                     ROUND(rebotes, 1)           AS rebounds,
@@ -199,7 +199,7 @@ def get_young_stars(
 def get_player_career(request: Request, player_name: str):
     query = """
         SELECT
-            season, equipa, idade, jogos_jogados,
+            season, equipa AS team, idade AS age, jogos_jogados,
             ROUND(pontos, 1)                                    AS points,
             ROUND(assistencias, 1)                              AS assists,
             ROUND(rebotes, 1)                                   AS rebounds,
@@ -221,7 +221,7 @@ def get_player_career(request: Request, player_name: str):
     if not results:
         return {"data": [], "count": 0, "player": player_name, "seasons_played": 0}
 
-    teams = list(dict.fromkeys(r["equipa"] for r in results))
+    teams = list(dict.fromkeys(r["team"] for r in results))
     teams_display = " / ".join(teams) if len(teams) <= 3 else f"{teams[0]} / {teams[1]} / +{len(teams)-2} more"
 
     return {

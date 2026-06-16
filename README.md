@@ -213,6 +213,26 @@ The model is **16x more accurate than a random baseline** - random prediction = 
 
 ---
 
+## 🔤 API Field Naming Convention
+
+The database schema uses Portuguese column names (legacy from the 2022 academic project).
+The API response layer normalises all fields to English:
+
+| Database column | API response field |
+|---|---|
+| `jogador` | `player` |
+| `equipa` | `team` |
+| `pontos` | `points` |
+| `assistencias` | `assists` |
+| `rebotes` | `rebounds` |
+| `ponto_fantasia` | `fantasy_points` |
+| `jogos_jogados` | `games_played` |
+| `idade` | `age` |
+
+This translation happens via SQL `SELECT` aliases within each endpoint router.
+
+---
+
 ## 🧪 Quality Assurance
 
 The platform includes a layered QA strategy covering transformation logic, API contracts, dataset integrity and operational health checks.

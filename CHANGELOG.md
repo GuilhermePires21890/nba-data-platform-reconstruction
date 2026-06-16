@@ -6,6 +6,37 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [Sprint 18] - 2026-06-15 - All-Time Records Differentiator
+
+### Added
+- `GET /analytics/all-time-records` endpoint returning 8 single-season record holders
+  with full context (player, team, season, value, label) across all 25 seasons (1996-2021)
+- Records covered: highest PPG, most RPG, most APG, highest fantasy points, best plus/minus,
+  best FG%, most 3-pointers made per game, most triple-doubles in a season
+- ALL-TIME RECORDS frontend section with 8 colour-coded cards (8th section in dashboard)
+- `safe_get()` retry helper in test suite to handle Render CDN rate limiting in CI
+- `pace_requests` autouse fixture (3s gap) in TestAnalyticsEndpoints for CI stability
+- `TestAllTimeRecordsEndpoint` class with 20 tests covering structure and known record holders
+- `TestPlayersEndpoint` class with 4 tests covering `/players/` with filters
+
+### Fixed
+- Column name bug: `percentagem_de_meta_de_campo` (not `porcentagem`) in FG% query
+- Rate limiting causing flaky CI tests - resolved with `safe_get` + `pace_requests` fixture
+- Field naming inconsistency: analytics endpoints now return English aliases for all fields
+  (`equipa → team`, `jogador → player`, `idade → age`) matching the `/players/` normalisation
+  established in Sprint 16 BUG-002
+
+---
+
+## [Sprint 17] - 2026-06-14 - Portfolio Assets
+
+### Added
+- CHANGELOG.md covering all sprints in Keep a Changelog format
+- README upgrade: Sprint roadmap table, live platform URLs, ADR table, QA section
+- LinkedIn post draft documenting the engineering narrative
+
+---
+
 ## [Sprint 16] - 2026-06-14 - Polish and Hardening
 
 ### Fixed

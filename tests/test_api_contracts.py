@@ -186,7 +186,7 @@ class TestAnalyticsEndpoints:
     def test_championship_predictor_fields_present(self, client):
         r = client.get("/analytics/championship-predictor")
         entry = r.json()["data"][0]
-        for field in ["season", "equipa", "championship_score", "predicted_rank"]:
+        for field in ["season", "team", "championship_score", "predicted_rank"]:
             assert field in entry
 
     def test_championship_predictor_season_filter(self, client):
@@ -219,18 +219,18 @@ class TestAnalyticsEndpoints:
         r = safe_get(client, "/analytics/young-stars?limit=50")
         assert r.status_code == 200, f"Expected 200, got {r.status_code} - possible rate limit"
         data = r.json()
-        players = [p["jogador"] for p in data["data"]]
+        players = [p["player"] for p in data["data"]]
         assert len(players) == len(set(players)), "Duplicate players found in young-stars response"
 
     def test_young_stars_all_under_25(self, client):
         r = safe_get(client, "/analytics/young-stars?limit=50")
-        ages = [p["idade"] for p in r.json()["data"]]
+        ages = [p["age"] for p in r.json()["data"]]
         assert all(a <= 25 for a in ages)
 
     def test_young_stars_fields_present(self, client):
         r = safe_get(client, "/analytics/young-stars?limit=1")
         star = r.json()["data"][0]
-        for field in ["jogador", "equipa", "season", "idade", "points", "assists", "rebounds"]:
+        for field in ["player", "team", "season", "age", "points", "assists", "rebounds"]:
             assert field in star
 
     def test_player_career_returns_200(self, client):
@@ -250,7 +250,7 @@ class TestAnalyticsEndpoints:
     def test_player_career_fields_present(self, client):
         r = safe_get(client, "/analytics/players/LeBron James/career")
         season = r.json()["data"][0]
-        for field in ["season", "equipa", "points", "assists", "rebounds"]:
+        for field in ["season", "team", "points", "assists", "rebounds"]:
             assert field in season
 
     def test_player_career_returns_teams(self, client):
@@ -263,3 +263,137 @@ class TestAnalyticsEndpoints:
         r = safe_get(client, "/analytics/players/Unknown Player XYZ/career")
         assert r.status_code == 200
         assert r.json()["count"] == 0
+
+
+class TestAllTimeRecordsEndpoint:
+    """
+    Tests for the Sprint 18 /analytics/all-time-records endpoint.
+    Returns 8 single-season record holders across all 25 seasons (1996-2021).
+    Uses the same pace_requests fixture as TestAnalyticsEndpoints.
+    """
+
+    @pytest.fixture(autouse=True)
+    def pace_requests(self):
+        """3s gap before each test - Render free tier rate limit (30 req/min)."""
+        time.sleep(3)
+        yield
+
+    def test_all_time_records_returns_200(self, client):
+        r = safe_get(client, "/analytics/all-time-records")
+        assert r.status_code == 200
+
+    def test_all_time_records_returns_records_key(self, client):
+        r = safe_get(client, "/analytics/all-time-records")
+        assert "records" in r.json()
+
+    def test_all_time_records_returns_8_records(self, client):
+        r = safe_get(client, "/analytics/all-time-records")
+        assert r.json()["total_records"] == 8
+
+    def test_all_time_records_highest_scoring_season_present(self, client):
+        r = safe_get(client, "/analytics/all-time-records")
+        assert "highest_scoring_season" in r.json()["records"]
+
+    def test_all_time_records_most_rebounds_present(self, client):
+        r = safe_get(client, "/analytics/all-time-records")
+        assert "most_rebounds_season" in r.json()["records"]
+
+    def test_all_time_records_most_assists_present(self, client):
+        r = safe_get(client, "/analytics/all-time-records")
+        assert "most_assists_season" in r.json()["records"]
+
+    def test_all_time_records_highest_fantasy_present(self, client):
+        r = safe_get(client, "/analytics/all-time-records")
+        assert "highest_fantasy_season" in r.json()["records"]
+
+    def test_all_time_records_best_plus_minus_present(self, client):
+        r = safe_get(client, "/analytics/all-time-records")
+        assert "best_plus_minus_season" in r.json()["records"]
+
+    def test_all_time_records_best_fg_pct_present(self, client):
+        r = safe_get(client, "/analytics/all-time-records")
+        assert "best_fg_pct_season" in r.json()["records"]
+
+    def test_all_time_records_most_3pm_present(self, client):
+        r = safe_get(client, "/analytics/all-time-records")
+        assert "most_3pm_season" in r.json()["records"]
+
+    def test_all_time_records_most_triple_doubles_present(self, client):
+        r = safe_get(client, "/analytics/all-time-records")
+        assert "most_triple_doubles_season" in r.json()["records"]
+
+    def test_all_time_records_each_record_has_player_field(self, client):
+        r = safe_get(client, "/analytics/all-time-records")
+        for record in r.json()["records"].values():
+            assert "player" in record
+
+    def test_all_time_records_each_record_has_team_field(self, client):
+        r = safe_get(client, "/analytics/all-time-records")
+        for record in r.json()["records"].values():
+            assert "team" in record
+
+    def test_all_time_records_each_record_has_season_field(self, client):
+        r = safe_get(client, "/analytics/all-time-records")
+        for record in r.json()["records"].values():
+            assert "season" in record
+
+    def test_all_time_records_each_record_has_value_field(self, client):
+        r = safe_get(client, "/analytics/all-time-records")
+        for record in r.json()["records"].values():
+            assert "value" in record
+
+    def test_all_time_records_each_record_has_label_field(self, client):
+        r = safe_get(client, "/analytics/all-time-records")
+        for record in r.json()["records"].values():
+            assert "label" in record
+
+    def test_all_time_records_harden_is_top_scorer(self, client):
+        r = safe_get(client, "/analytics/all-time-records")
+        record = r.json()["records"]["highest_scoring_season"]
+        assert record["player"] == "James Harden"
+        assert record["value"] == 36.1
+
+    def test_all_time_records_rodman_is_top_rebounder(self, client):
+        r = safe_get(client, "/analytics/all-time-records")
+        record = r.json()["records"]["most_rebounds_season"]
+        assert record["player"] == "Dennis Rodman"
+        assert record["value"] == 16.1
+
+    def test_all_time_records_seasons_covered_is_25(self, client):
+        r = safe_get(client, "/analytics/all-time-records")
+        assert r.json()["seasons_covered"] == 25
+
+    def test_all_time_records_total_records_is_8(self, client):
+        r = safe_get(client, "/analytics/all-time-records")
+        assert r.json()["total_records"] == 8
+
+
+class TestPlayersEndpoint:
+    """Tests for the GET /players/ endpoint with various filters."""
+
+    def test_players_returns_200(self, client):
+        r = client.get("/players/")
+        assert r.status_code == 200
+
+    def test_players_default_limit_20(self, client):
+        time.sleep(2)
+        r = client.get("/players/")
+        data = r.json()
+        assert len(data["data"]) <= 20
+
+    def test_players_season_filter(self, client):
+        time.sleep(2)
+        r = client.get("/players/?season=Epoca2020-21")
+        assert r.status_code == 200
+        data = r.json()["data"]
+        assert len(data) > 0
+        assert all(p["season"] == "Epoca2020-21" for p in data)
+
+    def test_players_team_filter(self, client):
+        time.sleep(2)
+        r = client.get("/players/?team=LAL")
+        assert r.status_code == 200
+        data = r.json()["data"]
+        assert len(data) > 0
+        # /players/ uses SELECT * - returns raw DB column names (equipa, not team)
+        assert all(p["equipa"] == "LAL" for p in data)

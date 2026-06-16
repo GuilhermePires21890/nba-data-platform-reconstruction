@@ -6,6 +6,19 @@ BASE_URL = "https://nba-data-platform-api.onrender.com"
 TIMEOUT = 90.0
 
 
+def safe_get(client, url, retries=2, retry_sleep=10):
+    """GET with retry on rate limit (HTML response = 429 from Render CDN)."""
+    for attempt in range(retries + 1):
+        r = client.get(url)
+        # If response is HTML, Render rate-limited us - wait and retry
+        content_type = r.headers.get("content-type", "")
+        if "text/html" in content_type and attempt < retries:
+            time.sleep(retry_sleep)
+            continue
+        return r
+    return r
+
+
 @pytest.fixture(scope="session")
 def client():
     with httpx.Client(base_url=BASE_URL, timeout=TIMEOUT) as c:
@@ -135,8 +148,11 @@ class TestAnalyticsEndpoints:
 
     @pytest.fixture(autouse=True)
     def pace_requests(self):
-        """Auto-applied fixture: 2s gap before each test in this class."""
-        time.sleep(2)
+        """Auto-applied fixture: 3s gap before each test in this class.
+        The Render free-tier API has a 30 req/min rate limit (slowapi).
+        3s spacing = max 20 req/min, safely under the limit.
+        """
+        time.sleep(3)
         yield
 
     def test_era_analysis_returns_200(self, client):
@@ -195,53 +211,55 @@ class TestAnalyticsEndpoints:
             assert field in row
 
     def test_young_stars_returns_200(self, client):
-        r = client.get("/analytics/young-stars")
+        r = safe_get(client, "/analytics/young-stars")
         assert r.status_code == 200
 
     def test_young_stars_no_duplicates(self, client):
         # BUG-004 regression: DISTINCT ON (jogador) should prevent duplicate players
-        r = client.get("/analytics/young-stars?limit=50")
+        r = safe_get(client, "/analytics/young-stars?limit=50")
         assert r.status_code == 200, f"Expected 200, got {r.status_code} - possible rate limit"
         data = r.json()
         players = [p["jogador"] for p in data["data"]]
         assert len(players) == len(set(players)), "Duplicate players found in young-stars response"
 
     def test_young_stars_all_under_25(self, client):
-        r = client.get("/analytics/young-stars?limit=50")
+        r = safe_get(client, "/analytics/young-stars?limit=50")
         ages = [p["idade"] for p in r.json()["data"]]
         assert all(a <= 25 for a in ages)
 
     def test_young_stars_fields_present(self, client):
-        r = client.get("/analytics/young-stars?limit=1")
+        r = safe_get(client, "/analytics/young-stars?limit=1")
         star = r.json()["data"][0]
         for field in ["jogador", "equipa", "season", "idade", "points", "assists", "rebounds"]:
             assert field in star
 
     def test_player_career_returns_200(self, client):
-        r = client.get("/analytics/players/LeBron James/career")
+        r = safe_get(client, "/analytics/players/LeBron James/career")
         assert r.status_code == 200
 
     def test_player_career_returns_player_name(self, client):
-        r = client.get("/analytics/players/LeBron James/career")
+        r = safe_get(client, "/analytics/players/LeBron James/career")
+        assert r.status_code == 200, f"Rate limited or error: {r.status_code}"
         assert r.json()["player"] == "LeBron James"
 
     def test_player_career_returns_seasons_played(self, client):
-        r = client.get("/analytics/players/LeBron James/career")
+        r = safe_get(client, "/analytics/players/LeBron James/career")
+        assert r.status_code == 200, f"Rate limited or error: {r.status_code}"
         assert r.json()["seasons_played"] > 0
 
     def test_player_career_fields_present(self, client):
-        r = client.get("/analytics/players/LeBron James/career")
+        r = safe_get(client, "/analytics/players/LeBron James/career")
         season = r.json()["data"][0]
         for field in ["season", "equipa", "points", "assists", "rebounds"]:
             assert field in season
 
     def test_player_career_returns_teams(self, client):
         # BUG-005 regression: career should expose all teams played for
-        r = client.get("/analytics/players/LeBron James/career")
+        r = safe_get(client, "/analytics/players/LeBron James/career")
         assert "teams" in r.json()
         assert "/" in r.json()["teams"]  # LeBron played for CLE / MIA / LAL
 
     def test_player_career_unknown_player_returns_empty(self, client):
-        r = client.get("/analytics/players/Unknown Player XYZ/career")
+        r = safe_get(client, "/analytics/players/Unknown Player XYZ/career")
         assert r.status_code == 200
         assert r.json()["count"] == 0

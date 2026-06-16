@@ -127,6 +127,18 @@ class TestTopScorersEndpoint:
 
 
 class TestAnalyticsEndpoints:
+    """
+    Analytics endpoint tests with rate-limit-aware pacing.
+    The CI runs against the live Render free-tier API (30 req/min limit).
+    A small sleep between tests prevents 429 responses during sequential runs.
+    """
+
+    @pytest.fixture(autouse=True)
+    def pace_requests(self):
+        """Auto-applied fixture: 2s gap before each test in this class."""
+        time.sleep(2)
+        yield
+
     def test_era_analysis_returns_200(self, client):
         r = client.get("/analytics/era-analysis")
         assert r.status_code == 200
@@ -188,8 +200,6 @@ class TestAnalyticsEndpoints:
 
     def test_young_stars_no_duplicates(self, client):
         # BUG-004 regression: DISTINCT ON (jogador) should prevent duplicate players
-        # Sleep to avoid rate limiting during CI sequential test runs
-        time.sleep(3)
         r = client.get("/analytics/young-stars?limit=50")
         assert r.status_code == 200, f"Expected 200, got {r.status_code} - possible rate limit"
         data = r.json()
@@ -197,7 +207,6 @@ class TestAnalyticsEndpoints:
         assert len(players) == len(set(players)), "Duplicate players found in young-stars response"
 
     def test_young_stars_all_under_25(self, client):
-        time.sleep(2)
         r = client.get("/analytics/young-stars?limit=50")
         ages = [p["idade"] for p in r.json()["data"]]
         assert all(a <= 25 for a in ages)

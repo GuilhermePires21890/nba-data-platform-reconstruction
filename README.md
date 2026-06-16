@@ -23,7 +23,7 @@
 | Area | Status |
 |---|---|
 | Portfolio-ready MVP | ✅ Completed |
-| Sprints 1-16 | ✅ Completed |
+| Sprints 1-18 | ✅ Completed |
 | Public dashboard and API | 🟢 Live |
 | CI pipeline | 🟢 Active on `main` |
 | QA Spec Suite | 🟢 7 SPECs, 78 scenarios |
@@ -374,6 +374,9 @@ nba-data-platform-reconstruction/
 | Sprint 14 | Super SPEC + QA Expert documentation - Gherkin/BDD - 7 SPECs, 78 scenarios | ✅ Completed |
 | Sprint 15 | Frontend Analytics Upgrade - era analysis, championship predictor, player career search, young stars | ✅ Completed |
 | Sprint 16 | Polish and Hardening - 6 bugs fixed, field naming normalized, cold start UX | ✅ Completed |
+| Sprint 17 | Portfolio Assets - CHANGELOG, README upgrade, LinkedIn post | ✅ Completed |
+| Sprint 18 | All-Time Records endpoint + frontend section + Swagger live | ✅ Completed |
+
 
 ---
 

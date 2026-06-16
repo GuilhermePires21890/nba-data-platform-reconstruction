@@ -209,7 +209,7 @@ The model is **16x more accurate than a random baseline** - random prediction = 
 | Championship Predictor | `/analytics/championship-predictor` | ML model ranking across 25 seasons |
 | Player Career | `/analytics/players/{name}/career` | Career trajectory line chart per player |
 | Young Stars | `/analytics/young-stars` | Best U25 seasons, deduplicated per player |
-| All-Time Records | /analytics/all-time-records | 8 single-season record holders with full context |
+| All-Time Records | `/analytics/all-time-records` | 8 single-season record holders with full context |
 
 ---
 

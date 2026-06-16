@@ -188,11 +188,16 @@ class TestAnalyticsEndpoints:
 
     def test_young_stars_no_duplicates(self, client):
         # BUG-004 regression: DISTINCT ON (jogador) should prevent duplicate players
+        # Sleep to avoid rate limiting during CI sequential test runs
+        time.sleep(3)
         r = client.get("/analytics/young-stars?limit=50")
-        players = [p["jogador"] for p in r.json()["data"]]
+        assert r.status_code == 200, f"Expected 200, got {r.status_code} - possible rate limit"
+        data = r.json()
+        players = [p["jogador"] for p in data["data"]]
         assert len(players) == len(set(players)), "Duplicate players found in young-stars response"
 
     def test_young_stars_all_under_25(self, client):
+        time.sleep(2)
         r = client.get("/analytics/young-stars?limit=50")
         ages = [p["idade"] for p in r.json()["data"]]
         assert all(a <= 25 for a in ages)

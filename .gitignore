@@ -52,3 +52,4 @@ Thumbs.db
 # SQL Server backups
 *.bak
 nba_dump.sql
+gitleaks-report.json

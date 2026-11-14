@@ -156,56 +156,56 @@ class TestAnalyticsEndpoints:
         yield
 
     def test_era_analysis_returns_200(self, client):
-        r = client.get("/analytics/era-analysis")
+        r = safe_get(client, "/analytics/era-analysis")
         assert r.status_code == 200
 
     def test_era_analysis_returns_5_eras(self, client):
-        r = client.get("/analytics/era-analysis")
+        r = safe_get(client, "/analytics/era-analysis")
         assert r.json()["count"] == 5
 
     def test_era_analysis_fields_present(self, client):
-        r = client.get("/analytics/era-analysis")
+        r = safe_get(client, "/analytics/era-analysis")
         era = r.json()["data"][0]
         for field in ["era", "avg_points", "avg_assists", "avg_rebounds", "avg_3pm", "avg_fantasy"]:
             assert field in era
 
     def test_era_analysis_first_era_is_jordan(self, client):
-        r = client.get("/analytics/era-analysis")
+        r = safe_get(client, "/analytics/era-analysis")
         eras = [e["era"] for e in r.json()["data"]]
         assert "1996-2001 Jordan Era" in eras
 
     def test_championship_predictor_returns_200(self, client):
-        r = client.get("/analytics/championship-predictor")
+        r = safe_get(client, "/analytics/championship-predictor")
         assert r.status_code == 200
 
     def test_championship_predictor_all_seasons_returns_25(self, client):
         # BUG-003 regression: without season filter should return 1 per season = 25
-        r = client.get("/analytics/championship-predictor")
+        r = safe_get(client, "/analytics/championship-predictor")
         assert r.json()["count"] == 25
 
     def test_championship_predictor_fields_present(self, client):
-        r = client.get("/analytics/championship-predictor")
+        r = safe_get(client, "/analytics/championship-predictor")
         entry = r.json()["data"][0]
         for field in ["season", "team", "championship_score", "predicted_rank"]:
             assert field in entry
 
     def test_championship_predictor_season_filter(self, client):
-        r = client.get("/analytics/championship-predictor?season=Epoca2020-21")
+        r = safe_get(client, "/analytics/championship-predictor?season=Epoca2020-21")
         assert r.status_code == 200
         data = r.json()["data"]
         assert len(data) > 0
         assert all(e["season"] == "Epoca2020-21" for e in data)
 
     def test_three_point_revolution_returns_200(self, client):
-        r = client.get("/analytics/3point-revolution")
+        r = safe_get(client, "/analytics/3point-revolution")
         assert r.status_code == 200
 
     def test_three_point_revolution_returns_25_seasons(self, client):
-        r = client.get("/analytics/3point-revolution")
+        r = safe_get(client, "/analytics/3point-revolution")
         assert r.json()["count"] == 25
 
     def test_three_point_revolution_fields_present(self, client):
-        r = client.get("/analytics/3point-revolution")
+        r = safe_get(client, "/analytics/3point-revolution")
         row = r.json()["data"][0]
         for field in ["season", "avg_3pm", "avg_3pa", "league_3p_pct"]:
             assert field in row

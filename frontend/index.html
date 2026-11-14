@@ -2097,12 +2097,12 @@
 
       const cards = players.map((p, i) => {
         const delay = (i * 0.05).toFixed(2);
-        const seasonLabel = (p.season || p.epoca || '').replace('Epoca', '');
+        const seasonLabel = (p.season || '').replace('Epoca', '');
         return `
           <div class="star-card" style="animation-delay:${delay}s">
-            <span class="star-rank">#${i + 1} · Age ${p.idade || '-'}</span>
-            <span class="star-name">${(p.jogador || '').toUpperCase()}</span>
-            <span class="star-meta">${p.equipa || '-'} · ${seasonLabel}</span>
+            <span class="star-rank">#${i + 1} · Age ${p.age ?? '-'}</span>
+            <span class="star-name">${(p.player || '').toUpperCase()}</span>
+            <span class="star-meta">${p.team || '-'} · ${seasonLabel}</span>
             <div class="star-stats">
               <div class="star-stat">
                 <span class="star-stat-val">${(+(p.points || p.pontos || 0)).toFixed(1)}</span>

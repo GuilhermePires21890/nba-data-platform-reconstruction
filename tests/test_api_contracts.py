@@ -397,3 +397,19 @@ class TestPlayersEndpoint:
         assert len(data) > 0
         # /players/ uses SELECT * - returns raw DB column names (equipa, not team)
         assert all(p["equipa"] == "LAL" for p in data)
+
+
+class TestInputValidation:
+    """Query parameters must be validated by FastAPI (422), never reach the database."""
+
+    @pytest.mark.parametrize("url", [
+        "/players/?limit=-1",
+        "/players/?limit=0",
+        "/players/?offset=-1",
+        "/players/top-scorers?limit=0",
+        "/analytics/young-stars?limit=-1",
+        "/analytics/championship-predictor?limit=0",
+    ])
+    def test_invalid_numeric_params_return_422(self, client, url):
+        r = safe_get(client, url)
+        assert r.status_code == 422, f"{url} returned {r.status_code}"

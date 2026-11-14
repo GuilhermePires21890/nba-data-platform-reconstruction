@@ -13,7 +13,7 @@ router = APIRouter(prefix="/analytics", tags=["Analytics"])
 def get_championship_predictor(
     request: Request,
     season: str = Query(None, description="Filter by season (e.g. Epoca2020-21)"),
-    limit: int = Query(30, le=30),
+    limit: int = Query(30, ge=1, le=30),
 ):
     query = """
         WITH roster_stats AS (
@@ -146,7 +146,7 @@ def get_3point_revolution(request: Request):
 def get_young_stars(
     request: Request,
     season: str = Query(None),
-    limit: int = Query(25, le=50),
+    limit: int = Query(25, ge=1, le=50),
 ):
     if season:
         query = """

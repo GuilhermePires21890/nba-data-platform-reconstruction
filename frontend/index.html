@@ -1926,6 +1926,10 @@
           </thead>
           <tbody>${tableRows}</tbody>
         </table>
+        <p class="card-sub" style="margin-top:12px; line-height:1.6">
+          How to read this: each row is one team in one season. Championship Score is a fixed weighted sum of the team's average +/-, fantasy points, points, assists and rebounds (weights 0.35, 0.25, 0.20, 0.10 and 0.10). Rank orders teams within a season. The # column is only the row number.
+          The weights are set in code and were not trained on data, and the score uses the same season's statistics. It describes that season and is not a forecast. Accuracy has not been validated.
+        </p>
       `;
     } catch (e) {
       container.innerHTML = `<div class="error-msg">Championship predictor unavailable. API may be starting up - try in 30s.</div>`;

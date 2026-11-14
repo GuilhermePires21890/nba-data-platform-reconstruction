@@ -14,8 +14,8 @@ def get_players(
     request: Request,
     season: str = Query(None, description="Filter by season (e.g. Epoca2020-21)"),
     team: str = Query(None, description="Filter by team (e.g. LAL)"),
-    limit: int = Query(20, le=100),
-    offset: int = Query(0),
+    limit: int = Query(20, ge=1, le=100),
+    offset: int = Query(0, ge=0),
 ):
     query = "SELECT * FROM player_stats WHERE 1=1"
     params = []
@@ -45,7 +45,7 @@ def get_players(
 def get_top_scorers(
     request: Request,
     season: str = Query(None),
-    limit: int = Query(10, le=50),
+    limit: int = Query(10, ge=1, le=50),
 ):
     # FIX BUG-001: added games_played to SELECT
     # FIX BUG-002: normalised field names to English

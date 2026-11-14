@@ -50,7 +50,7 @@ I rebuilt the original C# scraper pipeline into a modern Python stack - not beca
 
 The platform covers the full engineering surface: ETL pipeline, relational database, REST API with rate limiting and security headers, CI/CD with automated testing, cloud deployment on Supabase and Render, and an interactive frontend with 7 analytics sections powered by live API calls.
 
-Every technical decision is documented as an ADR. Every sprint is tracked in the CHANGELOG. The Championship Predictor model - a weighted scoring system backtested across 25 seasons - runs 16x better than random baseline. The QA suite covers 66 pytest tests and 78 Gherkin scenarios.
+Every technical decision is documented as an ADR. Every sprint is tracked in the CHANGELOG. The Championship Predictor is a weighted scoring model; its accuracy claims are pending a documented backtest. The QA suite covers 66 pytest tests and 78 Gherkin scenarios.
 
 The engineering story is the point. The NBA data is the vehicle.
 
@@ -167,15 +167,9 @@ Built with **Metabase** on top of **PostgreSQL**, covering 25 seasons of NBA his
 
 ## 🧠 Championship Predictor
 
-The project includes a Championship Predictor Score model evaluated across the 25-season historical dataset.
+The project includes a Championship Predictor weighted scoring model built on the 25-season historical dataset.
 
-| Metric | Result |
-|---|---|
-| Exact champion prediction accuracy | 16% |
-| Champion ranked inside top 5 | 52% |
-| Backtest coverage | 25 seasons |
-
-The model is **16x more accurate than a random baseline** - random prediction = 1/30 teams = 3.3% accuracy; this model = 16% exact accuracy backtested across 25 seasons.
+Accuracy metrics are not published yet. They will be reported once a documented backtest is re-run and reviewed.
 
 ---
 

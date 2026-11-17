@@ -1,12 +1,12 @@
 name: Supabase keep-alive
 
 # The Supabase free tier pauses a project after a period of inactivity.
-# This weekly request calls an endpoint that queries the database, so the
+# This daily request calls an endpoint that queries the database, so the
 # project stays active. /health does not touch the database, so it is not used.
 
 on:
   schedule:
-    - cron: "0 6 * * 1"  # every Monday at 06:00 UTC
+    - cron: "23 17 * * *"  # every day at 17:23 UTC (off the hour, to avoid GitHub delays)
   workflow_dispatch:
 
 permissions:

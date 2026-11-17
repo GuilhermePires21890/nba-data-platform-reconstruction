@@ -112,16 +112,17 @@ ORDER BY season ASC;
 
 
 -- ============================================================
--- QUERY 5 - Win Correlation Analysis
--- Which individual stats correlate most with team wins?
--- Aggregates player contributions by team and season
+-- QUERY 5 - Roster Profile by Team and Season
+-- Average player contribution per team-season (teams with 20+ games played).
+-- Team wins are not in player_stats (one row per player and season), so this
+-- query profiles the roster only. Correlating these stats with team wins needs a
+-- team-results table, which is future work.
 -- ============================================================
 
 SELECT
     equipa,
     season,
-    MAX(vitorias)                                   AS team_wins,
-    MAX(derrotas)                                   AS team_losses,
+    COUNT(*)                                        AS players_counted,
     ROUND(AVG(pontos), 2)                           AS avg_points_roster,
     ROUND(AVG(assistencias), 2)                     AS avg_assists_roster,
     ROUND(AVG(rebotes), 2)                          AS avg_rebounds_roster,
@@ -132,7 +133,7 @@ SELECT
 FROM player_stats
 WHERE jogos_jogados >= 20
 GROUP BY equipa, season
-ORDER BY team_wins DESC
+ORDER BY avg_fantasy_roster DESC
 LIMIT 30;
 
 

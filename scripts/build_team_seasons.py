@@ -75,6 +75,8 @@ def find_champion(games: list[dict]) -> dict | None:
 
 def write_csv(path: Path, rows: list[dict]) -> None:
     if not rows:
+        # Remove any previous output so a stale file is never read as current data.
+        path.unlink(missing_ok=True)
         return
     with path.open("w", newline="", encoding="utf-8") as fh:
         writer = csv.DictWriter(fh, fieldnames=list(rows[0].keys()))

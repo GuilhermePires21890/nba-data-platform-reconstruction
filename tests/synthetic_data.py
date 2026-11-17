@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import os
 import random
+from pathlib import Path
 
 import psycopg2
 
@@ -21,31 +22,15 @@ SEASONS = [f"Epoca{year}-{str(year + 1)[-2:]}" for year in range(1996, 2021)]  #
 TEAMS = [f"T{i:02d}" for i in range(1, 7)]
 PLAYERS = [f"Jogador {i:03d}" for i in range(1, 61)]  # 60 placeholder players
 
-DDL = """
-DROP TABLE IF EXISTS player_stats;
-CREATE TABLE player_stats (
-    jogador                              TEXT,
-    equipa                               TEXT,
-    season                               TEXT,
-    idade                                INTEGER,
-    jogos_jogados                        INTEGER,
-    pontos                               NUMERIC,
-    assistencias                         NUMERIC,
-    rebotes                              NUMERIC,
-    ponto_fantasia                       NUMERIC,
-    triplos_duplos                       INTEGER,
-    mais_ou_menos                        NUMERIC,
-    percentagem_de_meta_de_campo         NUMERIC,
-    golos_de_campo_de_3_pontos_feitos    NUMERIC,
-    tentativa_de_gol_de_campo_de_3_pontos NUMERIC
-);
-"""
+SCHEMA_FILE = Path(__file__).resolve().parents[1] / "sql" / "schema" / "create_player_stats_table.sql"
+DDL = "DROP TABLE IF EXISTS player_stats CASCADE;\n" + SCHEMA_FILE.read_text(encoding="utf-8")
 
 COLUMNS = [
-    "jogador", "equipa", "season", "idade", "jogos_jogados", "pontos",
-    "assistencias", "rebotes", "ponto_fantasia", "triplos_duplos",
-    "mais_ou_menos", "percentagem_de_meta_de_campo",
-    "golos_de_campo_de_3_pontos_feitos", "tentativa_de_gol_de_campo_de_3_pontos",
+    "jogador", "equipa", "season", "idade", "jogos_jogados", "minutos_jogador",
+    "pontos", "assistencias", "rebotes", "roubos", "bloqueio", "ponto_fantasia",
+    "triplos_duplos", "mais_ou_menos", "percentagem_de_meta_de_campo",
+    "percentagem_de_lances_livres", "golos_de_campo_de_3_pontos_feitos",
+    "tentativa_de_gol_de_campo_de_3_pontos",
 ]
 
 
@@ -104,6 +89,10 @@ def generate_rows(seed: int = 20260101) -> list[dict]:
                 "percentagem_de_meta_de_campo": round(rng.uniform(0.38, 0.58), 3),
                 "golos_de_campo_de_3_pontos_feitos": threes_made,
                 "tentativa_de_gol_de_campo_de_3_pontos": threes_attempted,
+                "minutos_jogador": round(games * rng.uniform(18.0, 36.0), 1),
+                "roubos": round(rng.uniform(0.3, 2.5), 1),
+                "bloqueio": round(rng.uniform(0.1, 2.0), 1),
+                "percentagem_de_lances_livres": round(rng.uniform(0.60, 0.92), 3),
             })
     _break_top_ties(rows)
     return rows

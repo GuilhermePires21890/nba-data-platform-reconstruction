@@ -19,8 +19,8 @@ SELECT
     ROUND(pontos, 1)                                                        AS total_points,
     ROUND(minutos_jogador, 1)                                               AS total_minutes,
     ROUND(pontos / NULLIF(minutos_jogador, 0), 4)                          AS points_per_minute,
-    ROUND(percentagem_de_meta_de_campo * 100, 1)                           AS fg_percentage,
-    ROUND(percentagem_de_lances_livres * 100, 1)                           AS ft_percentage
+    ROUND(percentagem_de_meta_de_campo, 1)                           AS fg_percentage,
+    ROUND(percentagem_de_lances_livres, 1)                           AS ft_percentage
 FROM player_stats
 WHERE jogos_jogados >= 50
   AND minutos_jogador > 0
@@ -153,7 +153,7 @@ SELECT
     ROUND(assistencias, 1)                          AS assists,
     ROUND(rebotes, 1)                               AS rebounds,
     ROUND(ponto_fantasia, 1)                        AS fantasy_points,
-    ROUND(percentagem_de_meta_de_campo * 100, 1)   AS fg_pct,
+    ROUND(percentagem_de_meta_de_campo, 1)   AS fg_pct,
     triplos_duplos
 FROM player_stats
 WHERE idade <= 25

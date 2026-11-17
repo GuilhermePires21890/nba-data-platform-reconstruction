@@ -43,3 +43,10 @@ def test_champion_is_winner_of_last_playoff_game():
 
 def test_no_playoffs_returns_none():
     assert bts.find_champion([game("AAA", "BBB", 100, 90)]) is None
+
+
+def test_empty_rebuild_removes_stale_csv(tmp_path):
+    stale = tmp_path / "team_seasons.csv"
+    stale.write_text("season,team\n2020,OLD\n", encoding="utf-8")
+    bts.write_csv(stale, [])
+    assert not stale.exists()

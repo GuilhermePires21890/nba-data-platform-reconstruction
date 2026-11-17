@@ -90,6 +90,9 @@ def download_season(api_key: str, season: int, output_dir: Path, force: bool) ->
         return manifest["games"]
 
     season_dir.mkdir(parents=True, exist_ok=True)
+    # Remove the old manifest too, so an interrupted re-download cannot look complete.
+    if manifest_path.exists():
+        manifest_path.unlink()
     for old_page in season_dir.glob("page_*.json"):
         old_page.unlink()
 

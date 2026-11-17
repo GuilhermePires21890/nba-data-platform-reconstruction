@@ -1,0 +1,34 @@
+name: Supabase keep-alive
+
+# The Supabase free tier pauses a project after a period of inactivity.
+# This weekly request calls an endpoint that queries the database, so the
+# project stays active. /health does not touch the database, so it is not used.
+
+on:
+  schedule:
+    - cron: "0 6 * * 1"  # every Monday at 06:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Query the database through the API
+        env:
+          API_URL: https://nba-data-platform-api.onrender.com
+        run: |
+          # Render's free tier can take 30-60 seconds to wake up, so allow retries.
+          status=$(curl --silent --output /tmp/seasons.json --write-out "%{http_code}" \
+            --max-time 120 --retry 3 --retry-delay 20 --retry-all-errors \
+            "$API_URL/players/seasons")
+          echo "HTTP status: $status"
+          if [ "$status" != "200" ]; then
+            echo "Keep-alive failed: the API did not return 200."
+            exit 1
+          fi
+          # Confirm the response is real data (a JSON body with entries), not an error page.
+          python3 -c "import json; d=json.load(open('/tmp/seasons.json')); assert len(d.get('seasons', [])) > 0, d; print('Seasons returned:', len(d['seasons']))"

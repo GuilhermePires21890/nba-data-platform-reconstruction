@@ -1,35 +1,25 @@
-import pytest
-import httpx
+"""API contract tests.
+
+The API runs in-process against a local PostgreSQL seeded with synthetic data
+(see tests/conftest.py and tests/synthetic_data.py). No request leaves the
+machine, so these tests do not depend on Render or on the production database.
+"""
+
 import time
 
-BASE_URL = "https://nba-data-platform-api.onrender.com"
-TIMEOUT = 90.0
+import pytest
+
+from synthetic_data import SEASONS, TEAMS, record_holders
 
 
-def safe_get(client, url, retries=2, retry_sleep=10):
-    """GET with retry on rate limit (HTML response = 429 from Render CDN)."""
-    for attempt in range(retries + 1):
-        r = client.get(url)
-        # If response is HTML, Render rate-limited us - wait and retry
-        content_type = r.headers.get("content-type", "")
-        if "text/html" in content_type and attempt < retries:
-            time.sleep(retry_sleep)
-            continue
-        return r
-    return r
+@pytest.fixture
+def client(api_client):
+    return api_client
 
 
-@pytest.fixture(scope="session")
-def client():
-    with httpx.Client(base_url=BASE_URL, timeout=TIMEOUT) as c:
-        # Warm up - wake API before running tests
-        for _ in range(3):
-            try:
-                c.get("/health")
-                break
-            except Exception:
-                time.sleep(10)
-        yield c
+def safe_get(client, url):
+    """GET a URL on the local test client."""
+    return client.get(url)
 
 
 class TestHealthEndpoint:
@@ -58,8 +48,9 @@ class TestRootEndpoint:
         assert "version" in r.json()
 
     def test_root_contains_records_count(self, client):
+        # The count is a constant in main.py, not computed from the table.
         r = client.get("/")
-        assert r.json()["records"] == 11460
+        assert isinstance(r.json()["records"], int)
 
 
 class TestSeasonsEndpoint:
@@ -69,7 +60,7 @@ class TestSeasonsEndpoint:
 
     def test_seasons_returns_25_seasons(self, client):
         r = client.get("/players/seasons")
-        assert len(r.json()["seasons"]) == 25
+        assert r.json()["seasons"] == SEASONS
 
     def test_seasons_contains_first_season(self, client):
         r = client.get("/players/seasons")
@@ -89,9 +80,9 @@ class TestTeamsEndpoint:
         r = client.get("/players/teams")
         assert len(r.json()["teams"]) > 0
 
-    def test_teams_contains_known_team(self, client):
+    def test_teams_contains_all_seeded_teams(self, client):
         r = client.get("/players/teams")
-        assert "LAL" in r.json()["teams"]
+        assert sorted(r.json()["teams"]) == sorted(TEAMS)
 
 
 class TestTopScorersEndpoint:
@@ -104,7 +95,6 @@ class TestTopScorersEndpoint:
         assert r.json()["count"] == 10
 
     def test_top_scorers_custom_limit(self, client):
-        time.sleep(2)
         r = client.get("/players/top-scorers?limit=25")
         assert r.json()["count"] == 25
 
@@ -140,20 +130,8 @@ class TestTopScorersEndpoint:
 
 
 class TestAnalyticsEndpoints:
-    """
-    Analytics endpoint tests with rate-limit-aware pacing.
-    The CI runs against the live Render free-tier API (30 req/min limit).
-    A small sleep between tests prevents 429 responses during sequential runs.
-    """
+    """Analytics endpoints: shape and business rules, checked against synthetic data."""
 
-    @pytest.fixture(autouse=True)
-    def pace_requests(self):
-        """Auto-applied fixture: 3s gap before each test in this class.
-        The Render free-tier API has a 30 req/min rate limit (slowapi).
-        3s spacing = max 20 req/min, safely under the limit.
-        """
-        time.sleep(3)
-        yield
 
     def test_era_analysis_returns_200(self, client):
         r = safe_get(client, "/analytics/era-analysis")
@@ -179,8 +157,8 @@ class TestAnalyticsEndpoints:
         assert r.status_code == 200
 
     def test_championship_predictor_all_seasons_returns_24(self, client):
-        # BUG-003 regression: one prediction per season. 1996-97 has no previous
-        # season, so 25 seasons give 24 forecasts.
+        # BUG-003 regression: one prediction per season. The first season has no
+        # previous season to forecast from, so 25 seasons give 24 forecasts.
         r = safe_get(client, "/analytics/championship-predictor")
         assert r.json()["count"] == 24
 
@@ -235,30 +213,30 @@ class TestAnalyticsEndpoints:
             assert field in star
 
     def test_player_career_returns_200(self, client):
-        r = safe_get(client, "/analytics/players/LeBron James/career")
+        r = safe_get(client, "/analytics/players/Jogador 001/career")
         assert r.status_code == 200
 
     def test_player_career_returns_player_name(self, client):
-        r = safe_get(client, "/analytics/players/LeBron James/career")
+        r = safe_get(client, "/analytics/players/Jogador 001/career")
         assert r.status_code == 200, f"Rate limited or error: {r.status_code}"
-        assert r.json()["player"] == "LeBron James"
+        assert r.json()["player"] == "Jogador 001"
 
     def test_player_career_returns_seasons_played(self, client):
-        r = safe_get(client, "/analytics/players/LeBron James/career")
+        r = safe_get(client, "/analytics/players/Jogador 001/career")
         assert r.status_code == 200, f"Rate limited or error: {r.status_code}"
         assert r.json()["seasons_played"] > 0
 
     def test_player_career_fields_present(self, client):
-        r = safe_get(client, "/analytics/players/LeBron James/career")
+        r = safe_get(client, "/analytics/players/Jogador 001/career")
         season = r.json()["data"][0]
         for field in ["season", "team", "points", "assists", "rebounds"]:
             assert field in season
 
     def test_player_career_returns_teams(self, client):
         # BUG-005 regression: career should expose all teams played for
-        r = safe_get(client, "/analytics/players/LeBron James/career")
+        r = safe_get(client, "/analytics/players/Jogador 001/career")
         assert "teams" in r.json()
-        assert "/" in r.json()["teams"]  # LeBron played for CLE / MIA / LAL
+        assert " / " in r.json()["teams"]  # Jogador 001 rotates between teams
 
     def test_player_career_unknown_player_returns_empty(self, client):
         r = safe_get(client, "/analytics/players/Unknown Player XYZ/career")
@@ -270,14 +248,8 @@ class TestAllTimeRecordsEndpoint:
     """
     Tests for the Sprint 18 /analytics/all-time-records endpoint.
     Returns 8 single-season record holders across all 25 seasons (1996-2021).
-    Uses the same pace_requests fixture as TestAnalyticsEndpoints.
     """
 
-    @pytest.fixture(autouse=True)
-    def pace_requests(self):
-        """3s gap before each test - Render free tier rate limit (30 req/min)."""
-        time.sleep(3)
-        yield
 
     def test_all_time_records_returns_200(self, client):
         r = safe_get(client, "/analytics/all-time-records")
@@ -348,17 +320,20 @@ class TestAllTimeRecordsEndpoint:
         for record in r.json()["records"].values():
             assert "label" in record
 
-    def test_all_time_records_harden_is_top_scorer(self, client):
-        r = safe_get(client, "/analytics/all-time-records")
+    def test_all_time_records_highest_scoring_matches_oracle(self, client, synthetic_rows):
+        r = client.get("/analytics/all-time-records")
         record = r.json()["records"]["highest_scoring_season"]
-        assert record["player"] == "James Harden"
-        assert record["value"] == 36.1
+        expected = record_holders(synthetic_rows)["highest_scoring_season"]
+        assert record["player"] == expected["player"]
+        assert record["season"] == expected["season"]
+        assert record["value"] == pytest.approx(expected["value"], abs=0.05)
 
-    def test_all_time_records_rodman_is_top_rebounder(self, client):
-        r = safe_get(client, "/analytics/all-time-records")
+    def test_all_time_records_most_rebounds_matches_oracle(self, client, synthetic_rows):
+        r = client.get("/analytics/all-time-records")
         record = r.json()["records"]["most_rebounds_season"]
-        assert record["player"] == "Dennis Rodman"
-        assert record["value"] == 16.1
+        expected = record_holders(synthetic_rows)["most_rebounds_season"]
+        assert record["player"] == expected["player"]
+        assert record["value"] == pytest.approx(expected["value"], abs=0.05)
 
     def test_all_time_records_seasons_covered_is_25(self, client):
         r = safe_get(client, "/analytics/all-time-records")
@@ -377,13 +352,11 @@ class TestPlayersEndpoint:
         assert r.status_code == 200
 
     def test_players_default_limit_20(self, client):
-        time.sleep(2)
         r = client.get("/players/")
         data = r.json()
         assert len(data["data"]) <= 20
 
     def test_players_season_filter(self, client):
-        time.sleep(2)
         r = client.get("/players/?season=Epoca2020-21")
         assert r.status_code == 200
         data = r.json()["data"]
@@ -391,13 +364,12 @@ class TestPlayersEndpoint:
         assert all(p["season"] == "Epoca2020-21" for p in data)
 
     def test_players_team_filter(self, client):
-        time.sleep(2)
-        r = client.get("/players/?team=LAL")
+        r = client.get("/players/?team=T01")
         assert r.status_code == 200
         data = r.json()["data"]
         assert len(data) > 0
         # /players/ uses SELECT * - returns raw DB column names (equipa, not team)
-        assert all(p["equipa"] == "LAL" for p in data)
+        assert all(p["equipa"] == "T01" for p in data)
 
 
 class TestInputValidation:

@@ -42,7 +42,7 @@ RECORD_COLUMNS = {
     "assistencias": 0.1,
     "ponto_fantasia": 0.1,
     "mais_ou_menos": 0.1,
-    "percentagem_de_meta_de_campo": 0.001,
+    "percentagem_de_meta_de_campo": 0.1,
     "golos_de_campo_de_3_pontos_feitos": 0.1,
     "triplos_duplos": 1,
 }
@@ -86,13 +86,13 @@ def generate_rows(seed: int = 20260101) -> list[dict]:
                 "ponto_fantasia": fantasy,
                 "triplos_duplos": rng.randint(0, 3),
                 "mais_ou_menos": round(rng.uniform(-10.0, 10.0), 1),
-                "percentagem_de_meta_de_campo": round(rng.uniform(0.38, 0.58), 3),
+                "percentagem_de_meta_de_campo": round(rng.uniform(38.0, 58.0), 1),
                 "golos_de_campo_de_3_pontos_feitos": threes_made,
                 "tentativa_de_gol_de_campo_de_3_pontos": threes_attempted,
                 "minutos_jogador": round(games * rng.uniform(18.0, 36.0), 1),
                 "roubos": round(rng.uniform(0.3, 2.5), 1),
                 "bloqueio": round(rng.uniform(0.1, 2.0), 1),
-                "percentagem_de_lances_livres": round(rng.uniform(0.60, 0.92), 3),
+                "percentagem_de_lances_livres": round(rng.uniform(60.0, 92.0), 1),
             })
     _break_top_ties(rows)
     return rows

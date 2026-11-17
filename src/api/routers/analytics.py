@@ -12,9 +12,12 @@ router = APIRouter(prefix="/analytics", tags=["Analytics"])
 @limiter.limit("30/minute")
 def get_championship_predictor(
     request: Request,
-    season: str = Query(None, description="Filter by season (e.g. Epoca2020-21)"),
+    season: str = Query(None, description="Target season to predict (e.g. Epoca2020-21)"),
     limit: int = Query(30, ge=1, le=30),
 ):
+    # Forecast, not description: each target season is scored with the PREVIOUS
+    # season's statistics only, so no information from the predicted season is used.
+    # The first season (Epoca1996-97) has no previous season and is not predicted.
     query = """
         WITH roster_stats AS (
             SELECT
@@ -30,30 +33,46 @@ def get_championship_predictor(
             WHERE jogos_jogados >= 20
             GROUP BY season, equipa
         ),
+        season_prior AS (
+            SELECT DISTINCT
+                season AS target_season,
+                'Epoca' || (SUBSTRING(season FROM 6 FOR 4)::int - 1)
+                    || '-' || LPAD(MOD(SUBSTRING(season FROM 6 FOR 4)::int, 100)::text, 2, '0')
+                    AS prior_season
+            FROM roster_stats
+        ),
         scored AS (
-            SELECT *,
+            SELECT
+                p.target_season                     AS season,
+                p.prior_season                      AS based_on_season,
+                r.equipa,
+                r.avg_plus_minus,
+                r.avg_fantasy,
+                r.avg_points,
+                r.avg_assists,
+                r.avg_rebounds,
                 ROUND(
-                    (avg_plus_minus * 0.35) +
-                    (avg_fantasy    * 0.25) +
-                    (avg_points     * 0.20) +
-                    (avg_assists    * 0.10) +
-                    (avg_rebounds   * 0.10)
-                , 3) AS championship_score,
+                    (r.avg_plus_minus * 0.35) +
+                    (r.avg_fantasy    * 0.25) +
+                    (r.avg_points     * 0.20) +
+                    (r.avg_assists    * 0.10) +
+                    (r.avg_rebounds   * 0.10)
+                , 3) AS championship_score
+            FROM season_prior p
+            JOIN roster_stats r ON r.season = p.prior_season
+        ),
+        ranked AS (
+            SELECT *,
                 RANK() OVER (
                     PARTITION BY season
-                    ORDER BY
-                        (avg_plus_minus * 0.35) +
-                        (avg_fantasy    * 0.25) +
-                        (avg_points     * 0.20) +
-                        (avg_assists    * 0.10) +
-                        (avg_rebounds   * 0.10) DESC
+                    ORDER BY championship_score DESC
                 ) AS predicted_rank
-            FROM roster_stats
+            FROM scored
         )
-        SELECT season, equipa AS team, championship_score,
+        SELECT season, based_on_season, equipa AS team, championship_score,
                avg_plus_minus, avg_fantasy, avg_points,
                avg_assists, avg_rebounds, predicted_rank
-        FROM scored
+        FROM ranked
         WHERE 1=1
     """
     params = []

@@ -178,15 +178,16 @@ class TestAnalyticsEndpoints:
         r = safe_get(client, "/analytics/championship-predictor")
         assert r.status_code == 200
 
-    def test_championship_predictor_all_seasons_returns_25(self, client):
-        # BUG-003 regression: without season filter should return 1 per season = 25
+    def test_championship_predictor_all_seasons_returns_24(self, client):
+        # BUG-003 regression: one prediction per season. 1996-97 has no previous
+        # season, so 25 seasons give 24 forecasts.
         r = safe_get(client, "/analytics/championship-predictor")
-        assert r.json()["count"] == 25
+        assert r.json()["count"] == 24
 
     def test_championship_predictor_fields_present(self, client):
         r = safe_get(client, "/analytics/championship-predictor")
         entry = r.json()["data"][0]
-        for field in ["season", "team", "championship_score", "predicted_rank"]:
+        for field in ["season", "based_on_season", "team", "championship_score", "predicted_rank"]:
             assert field in entry
 
     def test_championship_predictor_season_filter(self, client):

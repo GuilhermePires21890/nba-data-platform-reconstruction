@@ -9,7 +9,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 
 ### Added
-- `GET /analytics/true-shooting`: True Shooting % by era (games-weighted) and single-season leaders, with `min_games` and `limit` filters. Formula: points / (2 * (FGA + 0.44 * FTA)).
+- `GET /analytics/true-shooting`: True Shooting % by era (games-weighted) and single-season leaders, with `min_games` (default 50), `min_fga` (field-goal attempts per game, default 10) and `limit` filters. Formula: points / (2 * (FGA + 0.44 * FTA)).
 - `GET /analytics/players/{player_name}/totals`: career totals (seasons, games, points, rebounds, assists) derived from per-game averages multiplied by games played, plus the peak scoring season.
 - `GET /analytics/age-curve`: average points, rebounds and True Shooting % by age, ages 19 to 34.
 - `GET /analytics/roster-profile?season=YYYY-YY`: per team in one season, number of players (20+ games), average age and top three scorers.

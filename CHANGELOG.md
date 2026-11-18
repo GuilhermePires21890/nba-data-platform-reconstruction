@@ -6,6 +6,23 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [Unreleased]
+
+### Fixed
+- Documentation: seven champion labels in the legacy SQL comments of the original academic project were wrong. Corrected against balldontlie game results (`champions.csv`, 2000-2025):
+  - 2000-01: Los Angeles Lakers (legacy label: San Antonio Spurs)
+  - 2005-06: Miami Heat (legacy label: Detroit Pistons)
+  - 2006-07: San Antonio Spurs (legacy label: Dallas Mavericks)
+  - 2008-09: Los Angeles Lakers (legacy label: Cleveland Cavaliers)
+  - 2009-10: Los Angeles Lakers (legacy label: Cleveland Cavaliers)
+  - 2010-11: Dallas Mavericks (legacy label: Chicago Bulls)
+  - 2011-12: Miami Heat (legacy label: Chicago Bulls)
+- Legacy labels that matched the data were confirmed and not changed: Celtics 2007-08, Heat 2012-13, Spurs 2013-14, Warriors 2014-15.
+- Seasons 1996-97 to 1999-2000 are before the balldontlie dataset and were not re-checked against game data.
+- The original SQL files are kept unchanged as the historical record of the academic project.
+
+---
+
 ## [Sprint 18] - 2026-06-15 - All-Time Records Differentiator
 
 ### Added

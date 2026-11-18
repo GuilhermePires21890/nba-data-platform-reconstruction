@@ -406,6 +406,7 @@ nba-data-platform-reconstruction/
 | [ADR-004](docs/adr/ADR-004-metabase-dashboards.md) | Metabase for BI and dashboards | ✅ Accepted |
 | [ADR-005](docs/adr/ADR-005-testing-strategy.md) | Layered testing strategy | ✅ Accepted |
 | [ADR-006](docs/adr/ADR-006-security-strategy.md) | Risk-based security strategy | ✅ Accepted |
+| [ADR-007](docs/adr/ADR-007-external-data-licensing.md) | External data licensing and publication hold | ✅ Accepted |
 
 ---
 

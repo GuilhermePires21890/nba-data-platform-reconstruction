@@ -1098,6 +1098,13 @@
       .champ-table th:nth-child(n+4),
       .champ-table td:nth-child(n+4) { display: none; }
     }
+    /* ─── DATA TABLES (shooting efficiency, roster profile) ─── */
+    .table-wrap { overflow-x: auto; }
+    .data-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 1rem; }
+    .data-table th, .data-table td { padding: 10px 12px; border-bottom: 1px solid var(--border); text-align: left; vertical-align: top; }
+    .data-table th { color: var(--muted); font-weight: 500; font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; }
+    .data-table .num { text-align: right; font-variant-numeric: tabular-nums; }
+    .data-table .highlight { color: var(--accent); font-weight: 500; }
   </style>
 </head>
 <body>
@@ -1250,6 +1257,11 @@
     <p class="chart-subtitle">1996-97 to 2020-21 · minimum 20 games played · the Steph Curry era is visible</p>
     <canvas id="trendChart"></canvas>
   </div>
+  <div class="chart-container" style="margin-top:2rem">
+    <p class="chart-title">Style Shift by Era</p>
+    <p class="chart-subtitle">Three-point share of field-goal attempts vs offensive rebound share, per era · players with 20+ games</p>
+    <canvas id="styleChart"></canvas>
+  </div>
 </section>
 
 <hr class="section-divider" />
@@ -1327,6 +1339,74 @@
   </div>
   <p class="card-sub" style="margin-top:12px">Age is the value recorded in the source data for each season.</p>
 </section>
+
+<!-- AGE CURVE -->
+<section>
+  <div class="section-header">
+    <h2 class="section-title">AGE CURVE</h2>
+    <span class="section-tag">Ages 19-34</span>
+  </div>
+  <div id="age-container">
+    <div class="chart-container">
+      <p class="chart-title">Production by Age</p>
+      <p class="chart-subtitle">Average points, rebounds and True Shooting % per player-season · players with 20+ games · 1996-97 to 2020-21</p>
+      <canvas id="ageChart"></canvas>
+    </div>
+  </div>
+</section>
+
+<hr class="section-divider" />
+
+<!-- SHOOTING EFFICIENCY -->
+<section>
+  <div class="section-header">
+    <h2 class="section-title">SHOOTING EFFICIENCY</h2>
+    <span class="section-tag-blue">True Shooting %</span>
+  </div>
+  <div class="controls">
+    <div class="control-group">
+      <span class="control-label">Min FGA / game</span>
+      <select id="ts-fga-filter">
+        <option value="5">5</option>
+        <option value="10" selected>10</option>
+        <option value="15">15</option>
+      </select>
+    </div>
+    <div class="control-group">
+      <span class="control-label">Show</span>
+      <select id="ts-limit-filter">
+        <option value="5">Top 5</option>
+        <option value="10" selected>Top 10</option>
+        <option value="20">Top 20</option>
+      </select>
+    </div>
+    <button class="btn" style="background: var(--blue);" onclick="loadShootingEfficiency()">APPLY</button>
+  </div>
+  <div id="ts-container">
+    <div class="loading"><div class="spinner"></div> Loading efficiency data...</div>
+  </div>
+</section>
+
+<hr class="section-divider" />
+
+<!-- ROSTER PROFILE -->
+<section>
+  <div class="section-header">
+    <h2 class="section-title">ROSTER PROFILE</h2>
+    <span class="section-tag-gold">Team by Season</span>
+  </div>
+  <div class="controls">
+    <div class="control-group">
+      <span class="control-label">Season</span>
+      <select id="roster-season-filter" onchange="loadRosterProfile()"></select>
+    </div>
+  </div>
+  <div id="roster-container">
+    <div class="loading"><div class="spinner"></div> Loading roster profile...</div>
+  </div>
+</section>
+
+<hr class="section-divider" />
 
 <!-- ALL-TIME RECORDS -->
 <section>
@@ -1496,16 +1576,20 @@
       const seasonSel = document.getElementById('season-filter');
       const champSel  = document.getElementById('champ-season-filter');
       const youngSel  = document.getElementById('young-season-filter');
+      const rosterSel = document.getElementById('roster-season-filter');
 
       seasons.seasons.forEach(s => {
         const label = s.replace('Epoca', '');
-        [seasonSel, champSel, youngSel].forEach(sel => {
+        [seasonSel, champSel, youngSel, rosterSel].forEach(sel => {
           const opt = document.createElement('option');
           opt.value = s;
           opt.textContent = label;
           sel.appendChild(opt);
         });
       });
+
+      // Roster profile defaults to the most recent season in the dataset
+      if (seasons.seasons.length) rosterSel.value = seasons.seasons[seasons.seasons.length - 1];
 
       const teamSel = document.getElementById('team-filter');
       teams.teams.forEach(t => {
@@ -2007,6 +2091,7 @@
               <span class="career-stat-label">Seasons</span>
             </div>
           </div>
+          <div id="career-totals"></div>
           <div class="chart-container" style="background:var(--bg2)">
             <p class="chart-title">${playerName} - Career Trajectory</p>
             <p class="chart-subtitle">Points, Rebounds and Assists per season in the dataset</p>
@@ -2014,6 +2099,8 @@
           </div>
         </div>
       `;
+
+      loadCareerTotals(name);
 
       if (careerChartInstance) careerChartInstance.destroy();
 
@@ -2183,16 +2270,272 @@
     }
   }
 
+  // ─── AGE CURVE ───
+  let ageChartInstance = null;
+
+  async function loadAgeCurve() {
+    const container = document.getElementById('age-container');
+    try {
+      const data = await apiFetch('/analytics/age-curve');
+      const rows = data.data || [];
+      if (!rows.length) throw new Error('empty');
+
+      const labels = rows.map(r => r.age);
+      const pts = rows.map(r => +(+r.avg_points).toFixed(1));
+      const reb = rows.map(r => +(+r.avg_rebounds).toFixed(1));
+      const ts  = rows.map(r => +(+r.ts_pct).toFixed(1));
+
+      const ctx = document.getElementById('ageChart').getContext('2d');
+      if (ageChartInstance) ageChartInstance.destroy();
+      ageChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [
+            { label: 'Avg PTS', data: pts, borderColor: '#f97316', backgroundColor: 'rgba(249,115,22,0.06)',
+              borderWidth: 2, fill: true, tension: 0.35, pointRadius: 3, yAxisID: 'y' },
+            { label: 'Avg REB', data: reb, borderColor: '#38bdf8', backgroundColor: 'transparent',
+              borderWidth: 1.5, tension: 0.35, pointRadius: 2, yAxisID: 'y' },
+            { label: 'TS%', data: ts, borderColor: '#a78bfa', backgroundColor: 'transparent',
+              borderWidth: 1.5, borderDash: [4, 4], tension: 0.35, pointRadius: 2, yAxisID: 'y2' }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: true,
+          interaction: { mode: 'index', intersect: false },
+          plugins: {
+            legend: { labels: { color: '#64748b', font: { family: 'DM Mono', size: 10 } } },
+            tooltip: { ...baseTooltip(), callbacks: { title: items => `Age ${items[0].label}` } }
+          },
+          scales: {
+            x: {
+              grid: { color: CHART_DEFAULTS.gridColor },
+              ticks: { color: CHART_DEFAULTS.tickColor, font: CHART_DEFAULTS.tickFont }
+            },
+            y: {
+              position: 'left',
+              grid: { color: CHART_DEFAULTS.gridColor },
+              ticks: { color: '#f97316', font: CHART_DEFAULTS.tickFont }
+            },
+            y2: {
+              position: 'right',
+              grid: { drawOnChartArea: false },
+              ticks: { color: '#a78bfa', font: CHART_DEFAULTS.tickFont, callback: v => v + '%' }
+            }
+          }
+        }
+      });
+    } catch (e) {
+      container.innerHTML = `<div class="error-msg">Age curve unavailable. API may be starting up.</div>`;
+    }
+  }
+
+  // ─── STYLE EVOLUTION ───
+  let styleChartInstance = null;
+
+  async function loadStyleEvolution() {
+    try {
+      const data = await apiFetch('/analytics/style-evolution');
+      const rows = data.data || [];
+      if (!rows.length) throw new Error('empty');
+
+      const ctx = document.getElementById('styleChart').getContext('2d');
+      if (styleChartInstance) styleChartInstance.destroy();
+      styleChartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: rows.map(r => r.era),
+          datasets: [
+            { label: 'Three-point share of FGA',
+              data: rows.map(r => +(+r.three_point_attempt_share_pct).toFixed(1)),
+              backgroundColor: 'rgba(249,115,22,0.75)', borderRadius: 4 },
+            { label: 'Offensive rebound share',
+              data: rows.map(r => +(+r.offensive_rebound_share_pct).toFixed(1)),
+              backgroundColor: 'rgba(56,189,248,0.6)', borderRadius: 4 }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: true,
+          plugins: {
+            legend: { labels: { color: '#64748b', font: { family: 'DM Mono', size: 10 } } },
+            tooltip: { ...baseTooltip(), callbacks: { label: c => ` ${c.dataset.label}: ${c.parsed.y.toFixed(1)}%` } }
+          },
+          scales: baseScales(v => v + '%')
+        }
+      });
+    } catch (e) {}
+  }
+
+  // ─── SHOOTING EFFICIENCY ───
+  let tsEraChartInstance = null;
+
+  async function loadShootingEfficiency() {
+    const container = document.getElementById('ts-container');
+    const minFga = document.getElementById('ts-fga-filter').value;
+    const limit  = document.getElementById('ts-limit-filter').value;
+
+    container.innerHTML = `<div class="loading"><div class="spinner"></div> Loading efficiency data...</div>`;
+
+    try {
+      const data = await apiFetch(`/analytics/true-shooting?min_games=50&min_fga=${minFga}&limit=${limit}`);
+      const eras = data.by_era || [];
+      const leaders = data.leaders || [];
+      if (!eras.length) throw new Error('empty');
+
+      const rows = leaders.map((p, i) => {
+        const rankClass = i === 0 ? 'top1' : i === 1 ? 'top2' : i === 2 ? 'top3' : '';
+        return `
+          <tr>
+            <td><span class="lb-rank ${rankClass}">${i + 1}</span></td>
+            <td>${p.player}</td>
+            <td>${p.team} · ${p.season}</td>
+            <td class="num">${p.games}</td>
+            <td class="num highlight">${(+p.ts_pct).toFixed(1)}%</td>
+          </tr>`;
+      }).join('');
+
+      container.innerHTML = `
+        <div class="chart-container blue-accent">
+          <p class="chart-title">League True Shooting % by Era</p>
+          <p class="chart-subtitle">Games-weighted TS% = points / (2 × (FGA + 0.44 × FTA)) · players with 20+ games</p>
+          <canvas id="tsEraChart"></canvas>
+        </div>
+        <div class="table-wrap" style="margin-top:2rem">
+          <p class="chart-title">Top Single-Season True Shooting</p>
+          <p class="chart-subtitle">Minimum ${data.min_games} games and ${data.min_fga} field-goal attempts per game, so low-volume players do not dominate</p>
+          <table class="data-table">
+            <thead><tr><th>#</th><th>Player</th><th>Team · Season</th><th class="num">GP</th><th class="num">TS%</th></tr></thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>`;
+
+      if (tsEraChartInstance) tsEraChartInstance.destroy();
+      const ctx = document.getElementById('tsEraChart').getContext('2d');
+      tsEraChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: eras.map(e => e.era),
+          datasets: [{
+            label: 'League TS%',
+            data: eras.map(e => +(+e.league_ts_pct).toFixed(1)),
+            borderColor: '#38bdf8',
+            borderWidth: 2,
+            pointBackgroundColor: eras.map(e => (ERA_COLORS[e.era] || { color: '#38bdf8' }).color),
+            pointRadius: 6,
+            pointHoverRadius: 8,
+            tension: 0.3,
+            fill: false
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: true,
+          plugins: {
+            legend: { display: false },
+            tooltip: { ...baseTooltip(), callbacks: { label: c => ` ${c.parsed.y.toFixed(1)}% league TS` } }
+          },
+          scales: baseScales(v => v.toFixed(0) + '%')
+        }
+      });
+    } catch (e) {
+      container.innerHTML = `<div class="error-msg">Shooting efficiency unavailable. API may be starting up.</div>`;
+    }
+  }
+
+  // ─── ROSTER PROFILE ───
+  async function loadRosterProfile() {
+    const container = document.getElementById('roster-container');
+    const sel = document.getElementById('roster-season-filter');
+    const season = (sel.value || 'Epoca2020-21').replace('Epoca', '');
+
+    container.innerHTML = `<div class="loading"><div class="spinner"></div> Loading roster profile...</div>`;
+
+    try {
+      const data = await apiFetch(`/analytics/roster-profile?season=${encodeURIComponent(season)}`);
+      const teams = data.data || [];
+
+      if (!teams.length) {
+        container.innerHTML = `<div class="empty-msg">No roster data for ${season}.</div>`;
+        return;
+      }
+
+      const rows = teams.map(t => `
+        <tr>
+          <td>${t.team}</td>
+          <td class="num">${t.players}</td>
+          <td class="num">${(+t.avg_age).toFixed(1)}</td>
+          <td>${(t.top_scorers || []).join(' · ')}</td>
+        </tr>`).join('');
+
+      container.innerHTML = `
+        <div class="table-wrap">
+          <p class="chart-subtitle">Players with 20+ games in ${season} · average age and top three scorers per team</p>
+          <table class="data-table">
+            <thead><tr><th>Team</th><th class="num">Players</th><th class="num">Avg age</th><th>Top scorers</th></tr></thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>`;
+    } catch (e) {
+      container.innerHTML = `<div class="error-msg">Roster profile unavailable. API may be starting up.</div>`;
+    }
+  }
+
+  // ─── CAREER TOTALS (called from loadPlayerCareer) ───
+  async function loadCareerTotals(name) {
+    const el = document.getElementById('career-totals');
+    if (!el) return;
+    try {
+      const data = await apiFetch(`/analytics/players/${encodeURIComponent(name)}/totals`);
+      const t = data.totals;
+      const peak = data.peak_season;
+      if (!t) { el.innerHTML = ''; return; }
+
+      const fmt = n => Number(n).toLocaleString('en-US');
+      el.innerHTML = `
+        <div class="career-stats-row" style="margin-bottom:1rem">
+          <div class="career-stat-box">
+            <span class="career-stat-num">${fmt(t.games)}</span>
+            <span class="career-stat-label">Games</span>
+          </div>
+          <div class="career-stat-box">
+            <span class="career-stat-num" style="color:var(--gold)">${fmt(t.points)}</span>
+            <span class="career-stat-label">Total PTS</span>
+          </div>
+          <div class="career-stat-box">
+            <span class="career-stat-num" style="color:var(--blue)">${fmt(t.rebounds)}</span>
+            <span class="career-stat-label">Total REB</span>
+          </div>
+          <div class="career-stat-box">
+            <span class="career-stat-num" style="color:var(--purple)">${fmt(t.assists)}</span>
+            <span class="career-stat-label">Total AST</span>
+          </div>
+          ${peak ? `
+          <div class="career-stat-box">
+            <span class="career-stat-num" style="color:var(--success)">${peak.season}</span>
+            <span class="career-stat-label">Peak season · ${peak.points} PTS</span>
+          </div>` : ''}
+        </div>
+        <p class="card-sub" style="margin-bottom:1.5rem">Approximate totals: per-game averages multiplied by games played, 1996-97 to 2020-21.</p>`;
+    } catch (e) {
+      el.innerHTML = '';
+    }
+  }
+
   // ─── INIT ───
   (async () => {
     await Promise.all([
       loadOverview(),
-      loadFilters(),
+      loadFilters().then(loadRosterProfile),
       loadTopScorers(),
       loadEraAnalysis(),
       loadTrendChart(),
+      loadStyleEvolution(),
       loadChampionshipPredictor(),
       loadYoungStars(),
+      loadAgeCurve(),
+      loadShootingEfficiency(),
       loadAllTimeRecords(),
     ]);
   })();

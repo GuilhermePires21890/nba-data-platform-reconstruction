@@ -31,6 +31,8 @@ COLUMNS = [
     "triplos_duplos", "mais_ou_menos", "percentagem_de_meta_de_campo",
     "percentagem_de_lances_livres", "golos_de_campo_de_3_pontos_feitos",
     "tentativa_de_gol_de_campo_de_3_pontos",
+    "tentativas_de_metas_de_campo", "metas_de_campo_feitas",
+    "tentativa_de_lances_livres", "rebotes_ofensivos",
 ]
 
 
@@ -95,6 +97,16 @@ def generate_rows(seed: int = 20260101) -> list[dict]:
                 "percentagem_de_lances_livres": round(rng.uniform(60.0, 92.0), 1),
             })
     _break_top_ties(rows)
+    # Shooting volume and offensive rebounds come from a separate generator so the
+    # values above stay exactly as before. Makes are derived from the attempts and the
+    # field-goal percentage, so makes <= attempts and offensive rebounds <= rebounds.
+    rng2 = random.Random(seed + 1)
+    for row in rows:
+        attempts = round(rng2.uniform(3.0, 25.0), 1)
+        row["tentativas_de_metas_de_campo"] = attempts
+        row["metas_de_campo_feitas"] = round(attempts * row["percentagem_de_meta_de_campo"] / 100, 1)
+        row["tentativa_de_lances_livres"] = round(rng2.uniform(1.0, 10.0), 1)
+        row["rebotes_ofensivos"] = round(row["rebotes"] * rng2.uniform(0.2, 0.4), 1)
     return rows
 
 

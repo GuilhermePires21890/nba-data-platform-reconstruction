@@ -376,3 +376,193 @@ def get_all_time_records(request: Request):
         "seasons_covered": 25,
         "description": "Single-season record holders across all 25 NBA seasons (1996-2021)"
     }
+
+
+# ---------------------------------------------------------------------------
+# Enriched analytics: efficiency, career totals, age curve, roster profile and
+# style evolution. Values in player_stats are per-game averages, so ratios of
+# per-game values are the same as ratios of totals.
+# ---------------------------------------------------------------------------
+
+ERA_CASE = """
+    CASE
+        WHEN season IN ('Epoca1996-97','Epoca1997-98','Epoca1998-99','Epoca1999-00','Epoca2000-01')
+            THEN '1996-2001 Jordan Era'
+        WHEN season IN ('Epoca2001-02','Epoca2002-03','Epoca2003-04','Epoca2004-05','Epoca2005-06')
+            THEN '2001-2006 Post-Jordan'
+        WHEN season IN ('Epoca2006-07','Epoca2007-08','Epoca2008-09','Epoca2009-10','Epoca2010-11')
+            THEN '2006-2011 LeBron Rise'
+        WHEN season IN ('Epoca2011-12','Epoca2012-13','Epoca2013-14','Epoca2014-15','Epoca2015-16')
+            THEN '2011-2016 Heat and Warriors'
+        WHEN season IN ('Epoca2016-17','Epoca2017-18','Epoca2018-19','Epoca2019-20','Epoca2020-21')
+            THEN '2016-2021 Modern Era'
+    END
+"""
+
+# True Shooting: points / (2 * (FGA + 0.44 * FTA)). Expressed as a percentage.
+TS_EXPR = "pontos / NULLIF(2 * (tentativas_de_metas_de_campo + 0.44 * tentativa_de_lances_livres), 0) * 100"
+TS_LEAGUE_EXPR = (
+    "SUM(pontos * jogos_jogados) / "
+    "NULLIF(SUM(2 * (tentativas_de_metas_de_campo + 0.44 * tentativa_de_lances_livres) * jogos_jogados), 0) * 100"
+)
+
+
+@router.get("/true-shooting")
+@limiter.limit("30/minute")
+def get_true_shooting(
+    request: Request,
+    min_games: int = Query(50, ge=1, le=82, description="Minimum games for a season to count as a leader"),
+    limit: int = Query(10, ge=1, le=50, description="Number of single-season leaders to return"),
+):
+    """True Shooting % by era (weighted by games) and the best single seasons."""
+    era_query = f"""
+        SELECT era, ROUND({TS_LEAGUE_EXPR}, 1) AS league_ts_pct, COUNT(*) AS player_seasons
+        FROM (
+            SELECT {ERA_CASE} AS era, season, pontos, jogos_jogados,
+                   tentativas_de_metas_de_campo, tentativa_de_lances_livres
+            FROM player_stats
+            WHERE jogos_jogados >= 20
+        ) s
+        GROUP BY era
+        ORDER BY MIN(season)
+    """
+    leaders_query = f"""
+        SELECT jogador AS player, equipa AS team, REPLACE(season, 'Epoca', '') AS season,
+               jogos_jogados AS games, ROUND({TS_EXPR}, 1) AS ts_pct
+        FROM player_stats
+        WHERE jogos_jogados >= %s
+        ORDER BY ts_pct DESC NULLS LAST, jogador
+        LIMIT %s
+    """
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(era_query)
+            by_era = cur.fetchall()
+            cur.execute(leaders_query, [min_games, limit])
+            leaders = cur.fetchall()
+
+    return {
+        "by_era": by_era,
+        "leaders": leaders,
+        "min_games": min_games,
+        "count": len(leaders),
+    }
+
+
+@router.get("/players/{player_name}/totals")
+@limiter.limit("30/minute")
+def get_player_totals(request: Request, player_name: str):
+    """Career totals, derived from per-game averages times games played (approximate)."""
+    totals_query = """
+        SELECT
+            COUNT(*)                                        AS seasons,
+            SUM(jogos_jogados)                              AS games,
+            ROUND(SUM(pontos * jogos_jogados), 0)           AS points,
+            ROUND(SUM(rebotes * jogos_jogados), 0)          AS rebounds,
+            ROUND(SUM(assistencias * jogos_jogados), 0)     AS assists
+        FROM player_stats
+        WHERE jogador = %s
+    """
+    peak_query = """
+        SELECT REPLACE(season, 'Epoca', '') AS season, equipa AS team,
+               jogos_jogados AS games, ROUND(pontos, 1) AS points
+        FROM player_stats
+        WHERE jogador = %s AND jogos_jogados >= 20
+        ORDER BY pontos DESC, season DESC
+        LIMIT 1
+    """
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(totals_query, [player_name])
+            totals = cur.fetchone()
+            cur.execute(peak_query, [player_name])
+            peak = cur.fetchone()
+
+    if not totals or not totals["seasons"]:
+        return {"player": player_name, "totals": None, "peak_season": None}
+
+    return {"player": player_name, "totals": totals, "peak_season": peak}
+
+
+@router.get("/age-curve")
+@limiter.limit("30/minute")
+def get_age_curve(request: Request):
+    """Average points, rebounds and True Shooting by age, for ages 19 to 34."""
+    query = f"""
+        SELECT
+            idade                                   AS age,
+            COUNT(*)                                AS player_seasons,
+            ROUND(AVG(pontos), 1)                   AS avg_points,
+            ROUND(AVG(rebotes), 1)                  AS avg_rebounds,
+            ROUND({TS_LEAGUE_EXPR}, 1)              AS ts_pct
+        FROM player_stats
+        WHERE jogos_jogados >= 20 AND idade BETWEEN 19 AND 34
+        GROUP BY idade
+        ORDER BY idade
+    """
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(query)
+            results = cur.fetchall()
+
+    return {"data": results, "count": len(results)}
+
+
+@router.get("/roster-profile")
+@limiter.limit("30/minute")
+def get_roster_profile(
+    request: Request,
+    season: str = Query(..., pattern=r"^\d{4}-\d{2}$", description="Season start-end, for example 2010-11"),
+):
+    """Per team in one season: players with 20+ games, average age and top three scorers."""
+    query = """
+        WITH base AS (
+            SELECT equipa, jogador, idade, pontos,
+                   ROW_NUMBER() OVER (PARTITION BY equipa ORDER BY pontos DESC, jogador) AS rn
+            FROM player_stats
+            WHERE season = %s AND jogos_jogados >= 20
+        )
+        SELECT
+            equipa                                          AS team,
+            COUNT(*)                                        AS players,
+            ROUND(AVG(idade), 1)                            AS avg_age,
+            ARRAY_AGG(jogador ORDER BY rn) FILTER (WHERE rn <= 3) AS top_scorers
+        FROM base
+        GROUP BY equipa
+        ORDER BY equipa
+    """
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(query, [f"Epoca{season}"])
+            results = cur.fetchall()
+
+    return {"season": season, "data": results, "count": len(results)}
+
+
+@router.get("/style-evolution")
+@limiter.limit("30/minute")
+def get_style_evolution(request: Request):
+    """Per era: three-point share of field-goal attempts and offensive rebound share."""
+    query = f"""
+        SELECT
+            era,
+            COUNT(*)                                                            AS player_seasons,
+            ROUND(SUM(tentativa_de_gol_de_campo_de_3_pontos) /
+                  NULLIF(SUM(tentativas_de_metas_de_campo), 0) * 100, 1)        AS three_point_attempt_share_pct,
+            ROUND(SUM(rebotes_ofensivos) / NULLIF(SUM(rebotes), 0) * 100, 1)    AS offensive_rebound_share_pct
+        FROM (
+            SELECT {ERA_CASE} AS era, season, tentativa_de_gol_de_campo_de_3_pontos,
+                   tentativas_de_metas_de_campo, rebotes_ofensivos, rebotes
+            FROM player_stats
+            WHERE jogos_jogados >= 20
+        ) s
+        GROUP BY era
+        ORDER BY MIN(season)
+    """
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(query)
+            results = cur.fetchall()
+
+    return {"data": results, "count": len(results)}
+

@@ -1105,6 +1105,62 @@
     .data-table th { color: var(--muted); font-weight: 500; font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; }
     .data-table .num { text-align: right; font-variant-numeric: tabular-nums; }
     .data-table .highlight { color: var(--accent); font-weight: 500; }
+    /* ─── SECTION NAV + HERO CTA ─── */
+    .section-nav {
+      position: sticky;
+      top: var(--header-h, 72px);
+      z-index: 90;
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      white-space: nowrap;
+      padding: 10px 16px;
+      background: rgba(8,10,15,0.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      scrollbar-width: none;
+    }
+    .section-nav::-webkit-scrollbar { display: none; }
+    .section-nav a {
+      flex: 0 0 auto;
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--muted2);
+      text-decoration: none;
+      padding: 6px 10px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+    }
+    .section-nav a:hover, .section-nav a:focus-visible {
+      color: var(--accent);
+      border-color: rgba(249,115,22,0.4);
+      outline: none;
+    }
+    section[id] { scroll-margin-top: calc(var(--header-h, 72px) + 56px); }
+    .hero-cta {
+      display: inline-block;
+      margin: 0 0 1.5rem;
+      font-family: var(--mono);
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #080a0f;
+      background: var(--accent);
+      padding: 12px 20px;
+      border-radius: 6px;
+      text-decoration: none;
+    }
+    .hero-cta:hover, .hero-cta:focus-visible { background: var(--accent2); outline: none; }
+
+    /* Section headers wrap on narrow screens instead of pushing the page sideways */
+    @media (max-width: 768px) {
+      .section-header { flex-wrap: wrap; gap: 8px; }
+      #champ-mode-label { margin-left: 0 !important; }
+      .control-group, .controls select { min-width: 0; max-width: 100%; }
+      .controls select { width: 100%; text-overflow: ellipsis; }
+    }
   </style>
 </head>
 <body>
@@ -1142,6 +1198,19 @@
   </div>
 </header>
 
+<nav class="section-nav" aria-label="Page sections">
+  <a href="#scorers">Leaders</a>
+  <a href="#eras">Eras</a>
+  <a href="#three-point">3-Point</a>
+  <a href="#predictor">Predictor</a>
+  <a href="#career">Career</a>
+  <a href="#young">Young Stars</a>
+  <a href="#age">Age</a>
+  <a href="#efficiency">Efficiency</a>
+  <a href="#roster">Roster</a>
+  <a href="#records">Records</a>
+</nav>
+
 <!-- HERO -->
 <div class="hero">
   <div class="hero-bg"></div>
@@ -1151,6 +1220,7 @@
       25 SEASONS<br>
       <span class="line2">OF NBA DATA</span>
     </h1>
+    <a href="#scorers" class="hero-cta">Explore the analytics ↓</a>
     <p class="hero-sub">From 1996 to 2021 - every stat, every season, every story. Built from an academic scraper, rebuilt as a professional data platform.</p>
     <div class="hero-stats">
       <div class="hero-stat">
@@ -1177,7 +1247,7 @@
 </div>
 
 <!-- PLATFORM STATS -->
-<section>
+<section id="overview">
   <div class="section-header">
     <h2 class="section-title">PLATFORM OVERVIEW</h2>
     <span class="section-tag">Live Data</span>
@@ -1190,7 +1260,7 @@
 <hr class="section-divider" />
 
 <!-- TOP SCORERS -->
-<section>
+<section id="scorers">
   <div class="section-header">
     <h2 class="section-title">SCORING LEADERS</h2>
     <span class="section-tag">1996-2021</span>
@@ -1229,7 +1299,7 @@
 <hr class="section-divider" />
 
 <!-- ERA ANALYSIS -->
-<section>
+<section id="eras">
   <div class="section-header">
     <h2 class="section-title">ERA ANALYSIS</h2>
     <span class="section-tag-blue">5 Historical Eras</span>
@@ -1247,7 +1317,7 @@
 <hr class="section-divider" />
 
 <!-- 3-POINT REVOLUTION -->
-<section>
+<section id="three-point">
   <div class="section-header">
     <h2 class="section-title">3-POINT REVOLUTION</h2>
     <span class="section-tag">Trend Analysis</span>
@@ -1267,11 +1337,11 @@
 <hr class="section-divider" />
 
 <!-- CHAMPIONSHIP PREDICTOR -->
-<section>
+<section id="predictor">
   <div class="section-header">
     <h2 class="section-title">CHAMPIONSHIP PREDICTOR</h2>
     <span class="section-tag-gold">Weighted Scoring Model</span>
-    <span id="champ-mode-label" style="font-size:11px; color:var(--muted); margin-left:auto; font-family:var(--mono)">Predicted champion per season · 25 seasons</span>
+    <span id="champ-mode-label" style="font-size:11px; color:var(--muted); margin-left:auto; font-family:var(--mono)">Predicted team ranking per season · 25 seasons</span>
     <span class="section-count" id="champ-count"></span>
   </div>
   <div class="controls">
@@ -1291,7 +1361,7 @@
 <hr class="section-divider" />
 
 <!-- PLAYER CAREER SEARCH -->
-<section>
+<section id="career">
   <div class="section-header">
     <h2 class="section-title">PLAYER CAREER</h2>
     <span class="section-tag-purple">Career Trajectory</span>
@@ -1311,7 +1381,7 @@
 <hr class="section-divider" />
 
 <!-- YOUNG STARS -->
-<section>
+<section id="young">
   <div class="section-header">
     <h2 class="section-title">YOUNG STARS</h2>
     <span class="section-tag-purple">Under 25</span>
@@ -1341,7 +1411,7 @@
 </section>
 
 <!-- AGE CURVE -->
-<section>
+<section id="age">
   <div class="section-header">
     <h2 class="section-title">AGE CURVE</h2>
     <span class="section-tag">Ages 19-34</span>
@@ -1358,7 +1428,7 @@
 <hr class="section-divider" />
 
 <!-- SHOOTING EFFICIENCY -->
-<section>
+<section id="efficiency">
   <div class="section-header">
     <h2 class="section-title">SHOOTING EFFICIENCY</h2>
     <span class="section-tag-blue">True Shooting %</span>
@@ -1390,7 +1460,7 @@
 <hr class="section-divider" />
 
 <!-- ROSTER PROFILE -->
-<section>
+<section id="roster">
   <div class="section-header">
     <h2 class="section-title">ROSTER PROFILE</h2>
     <span class="section-tag-gold">Team by Season</span>
@@ -1409,7 +1479,7 @@
 <hr class="section-divider" />
 
 <!-- ALL-TIME RECORDS -->
-<section>
+<section id="records">
   <div class="section-header">
     <h2 class="section-title">ALL-TIME RECORDS</h2>
     <span class="section-tag-gold">25 Seasons · Single Season Bests</span>
@@ -1534,9 +1604,9 @@
           <p class="card-sub">1996-97 to 2020-21</p>
         </div>
         <div class="stat-card">
-          <p class="card-label">Total Teams</p>
+          <p class="card-label">Team Codes</p>
           <p class="card-value">${teams.teams.length}</p>
-          <p class="card-sub">Active & historical franchises</p>
+          <p class="card-sub">30 current franchises · 6 historical names</p>
         </div>
         <div class="stat-card">
           <p class="card-label">Player Records</p>
@@ -1565,6 +1635,16 @@
   }
 
   // ─── LOAD FILTERS ───
+  // Historical team codes, labelled with the franchise they belong to today
+  const TEAM_LABELS = {
+    CHH: 'CHH · Charlotte Hornets 1988-02 (now NOP)',
+    NJN: 'NJN · New Jersey Nets (now BKN)',
+    NOH: 'NOH · New Orleans Hornets (now NOP)',
+    NOK: 'NOK · New Orleans/Oklahoma City Hornets (now NOP)',
+    SEA: 'SEA · Seattle SuperSonics (now OKC)',
+    VAN: 'VAN · Vancouver Grizzlies (now MEM)',
+  };
+
   async function loadFilters() {
     try {
       const [seasons, teams] = await Promise.all([
@@ -1595,7 +1675,7 @@
       teams.teams.forEach(t => {
         const opt = document.createElement('option');
         opt.value = t;
-        opt.textContent = t;
+        opt.textContent = TEAM_LABELS[t] || t;
         teamSel.appendChild(opt);
       });
     } catch (e) {}
@@ -1953,7 +2033,7 @@
     if (modeLabel) {
       modeLabel.textContent = season
         ? `All teams ranked for ${season.replace('Epoca','')}`
-        : 'Predicted champion per season · 24 seasons';
+        : 'Predicted team ranking per season · 24 seasons';
     }
 
     try {
@@ -2523,8 +2603,16 @@
     }
   }
 
+  // ─── HEADER HEIGHT (offset for the sticky section nav) ───
+  function setHeaderHeightVar() {
+    const h = document.querySelector('header');
+    if (h) document.documentElement.style.setProperty('--header-h', h.offsetHeight + 'px');
+  }
+  window.addEventListener('resize', setHeaderHeightVar);
+
   // ─── INIT ───
   (async () => {
+    setHeaderHeightVar();
     await Promise.all([
       loadOverview(),
       loadFilters().then(loadRosterProfile),

@@ -1161,6 +1161,16 @@
       .control-group, .controls select { min-width: 0; max-width: 100%; }
       .controls select { width: 100%; text-overflow: ellipsis; }
     }
+    .dot.pending { background: var(--gold); animation: none; box-shadow: none; }
+    .status-dot, .api-link { white-space: nowrap; }
+
+    @media (max-width: 768px) {
+      .logo-text { font-size: 0.95rem; white-space: nowrap; }
+      .header-meta { gap: 0.5rem; }
+      .api-link { font-size: 10px; }
+      .status-dot { font-size: 10px; }
+      .status-dot .s-prefix { display: none; }
+    }
   </style>
 </head>
 <body>
@@ -1190,9 +1200,9 @@
     <span class="logo-text">NBA <span>DATA</span> PLATFORM</span>
   </div>
   <div class="header-meta">
-    <div class="status-dot">
-      <div class="dot"></div>
-      API LIVE
+    <div class="status-dot" id="api-status">
+      <div class="dot pending" id="api-dot"></div>
+      <span class="s-prefix">API </span><span id="api-status-text">WAKING</span>
     </div>
     <a href="https://nba-data-platform-api.onrender.com/docs" target="_blank" class="api-link">API DOCS →</a>
   </div>
@@ -1234,8 +1244,8 @@
       </div>
       <div class="hero-divider"></div>
       <div class="hero-stat">
-        <span class="hero-stat-num">332K</span>
-        <span class="hero-stat-label">Data Fields</span>
+        <span class="hero-stat-num">11</span>
+        <span class="hero-stat-label">Analytics Endpoints</span>
       </div>
       <div class="hero-divider"></div>
       <div class="hero-stat">
@@ -1545,6 +1555,10 @@
     // Hide cold-start banner on first successful call
     if (!_apiReady) {
       _apiReady = true;
+      const dot = document.getElementById('api-dot');
+      const txt = document.getElementById('api-status-text');
+      if (dot) dot.classList.remove('pending');
+      if (txt) txt.textContent = 'LIVE';
       const banner = document.getElementById('cold-start-banner');
       if (banner) banner.style.display = 'none';
     }

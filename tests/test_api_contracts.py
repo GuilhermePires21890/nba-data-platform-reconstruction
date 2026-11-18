@@ -373,11 +373,21 @@ class TestEnrichedAnalytics:
         assert leaders, "expected at least one leader with 60+ games"
         assert all(row["games"] >= 60 for row in leaders)
 
-    def test_true_shooting_top_leader_matches_oracle(self, client, synthetic_rows):
-        r = safe_get(client, "/analytics/true-shooting?min_games=50&limit=1")
-        leader = r.json()["leaders"][0]
-        expected = max(self._ts(row) for row in synthetic_rows if row["jogos_jogados"] >= 50)
-        assert abs(leader["ts_pct"] - expected) <= 0.05
+    def test_true_shooting_top_leaders_match_oracle(self, client, synthetic_rows):
+        r = safe_get(client, "/analytics/true-shooting?min_games=50&min_fga=15&limit=3")
+        leaders = r.json()["leaders"]
+        eligible = [row for row in synthetic_rows
+                    if row["jogos_jogados"] >= 50 and row["tentativas_de_metas_de_campo"] >= 15]
+        expected = sorted((self._ts(row) for row in eligible), reverse=True)[:3]
+        assert len(leaders) == 3
+        for leader, value in zip(leaders, expected):
+            assert abs(leader["ts_pct"] - value) <= 0.05
+
+    def test_true_shooting_min_fga_filters_low_volume_players(self, client, synthetic_rows):
+        r = safe_get(client, "/analytics/true-shooting?min_games=1&min_fga=20&limit=50")
+        assert r.status_code == 200
+        eligible = [row for row in synthetic_rows if row["tentativas_de_metas_de_campo"] >= 20]
+        assert r.json()["count"] == min(50, len(eligible))
 
     def test_true_shooting_limit_is_enforced(self, client):
         r = safe_get(client, "/analytics/true-shooting?limit=3")

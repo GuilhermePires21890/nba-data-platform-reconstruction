@@ -412,6 +412,10 @@ TS_LEAGUE_EXPR = (
 def get_true_shooting(
     request: Request,
     min_games: int = Query(50, ge=1, le=82, description="Minimum games for a season to count as a leader"),
+    min_fga: float = Query(
+        10.0, ge=0, le=40,
+        description="Minimum field-goal attempts per game, so low-volume players do not dominate the ranking",
+    ),
     limit: int = Query(10, ge=1, le=50, description="Number of single-season leaders to return"),
 ):
     """True Shooting % by era (weighted by games) and the best single seasons."""
@@ -431,6 +435,7 @@ def get_true_shooting(
                jogos_jogados AS games, ROUND({TS_EXPR}, 1) AS ts_pct
         FROM player_stats
         WHERE jogos_jogados >= %s
+          AND tentativas_de_metas_de_campo >= %s
         ORDER BY ts_pct DESC NULLS LAST, jogador
         LIMIT %s
     """
@@ -438,13 +443,14 @@ def get_true_shooting(
         with conn.cursor() as cur:
             cur.execute(era_query)
             by_era = cur.fetchall()
-            cur.execute(leaders_query, [min_games, limit])
+            cur.execute(leaders_query, [min_games, min_fga, limit])
             leaders = cur.fetchall()
 
     return {
         "by_era": by_era,
         "leaders": leaders,
         "min_games": min_games,
+        "min_fga": min_fga,
         "count": len(leaders),
     }
 

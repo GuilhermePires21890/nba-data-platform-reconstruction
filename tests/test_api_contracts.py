@@ -344,6 +344,132 @@ class TestAllTimeRecordsEndpoint:
         assert r.json()["total_records"] == 8
 
 
+class TestEnrichedAnalytics:
+    """Efficiency, career totals, age curve, roster profile and style evolution.
+
+    Each business rule is checked twice: the response must have the right shape,
+    and the value must match a plain Python calculation over the synthetic rows.
+    """
+
+    @staticmethod
+    def _ts(row):
+        attempts = row["tentativas_de_metas_de_campo"] + 0.44 * row["tentativa_de_lances_livres"]
+        return row["pontos"] / (2 * attempts) * 100
+
+    # --- True Shooting ---------------------------------------------------
+
+    def test_true_shooting_returns_200_with_five_eras(self, client):
+        r = safe_get(client, "/analytics/true-shooting")
+        assert r.status_code == 200
+        body = r.json()
+        assert len(body["by_era"]) == 5
+        for field in ["era", "league_ts_pct", "player_seasons"]:
+            assert field in body["by_era"][0]
+
+    def test_true_shooting_respects_min_games(self, client):
+        r = safe_get(client, "/analytics/true-shooting?min_games=60&limit=20")
+        assert r.status_code == 200
+        leaders = r.json()["leaders"]
+        assert leaders, "expected at least one leader with 60+ games"
+        assert all(row["games"] >= 60 for row in leaders)
+
+    def test_true_shooting_top_leader_matches_oracle(self, client, synthetic_rows):
+        r = safe_get(client, "/analytics/true-shooting?min_games=50&limit=1")
+        leader = r.json()["leaders"][0]
+        expected = max(self._ts(row) for row in synthetic_rows if row["jogos_jogados"] >= 50)
+        assert abs(leader["ts_pct"] - expected) <= 0.05
+
+    def test_true_shooting_limit_is_enforced(self, client):
+        r = safe_get(client, "/analytics/true-shooting?limit=3")
+        assert len(r.json()["leaders"]) == 3
+
+    # --- Career totals ---------------------------------------------------
+
+    def test_player_totals_match_oracle(self, client, synthetic_rows):
+        r = safe_get(client, "/analytics/players/Jogador 001/totals")
+        assert r.status_code == 200
+        totals = r.json()["totals"]
+        rows = [row for row in synthetic_rows if row["jogador"] == "Jogador 001"]
+        assert totals["seasons"] == len(rows)
+        assert totals["games"] == sum(row["jogos_jogados"] for row in rows)
+        expected_points = sum(row["pontos"] * row["jogos_jogados"] for row in rows)
+        assert abs(float(totals["points"]) - expected_points) <= 1
+
+    def test_player_totals_peak_season_is_highest_scoring(self, client, synthetic_rows):
+        r = safe_get(client, "/analytics/players/Jogador 001/totals")
+        peak = r.json()["peak_season"]
+        eligible = [row for row in synthetic_rows
+                    if row["jogador"] == "Jogador 001" and row["jogos_jogados"] >= 20]
+        best = max(row["pontos"] for row in eligible)
+        assert peak is not None
+        assert abs(peak["points"] - best) <= 0.05
+
+    def test_player_totals_unknown_player_returns_null(self, client):
+        r = safe_get(client, "/analytics/players/Unknown Player XYZ/totals")
+        assert r.status_code == 200
+        assert r.json()["totals"] is None
+
+    # --- Age curve -------------------------------------------------------
+
+    def test_age_curve_covers_ages_19_to_34_only(self, client):
+        r = safe_get(client, "/analytics/age-curve")
+        assert r.status_code == 200
+        ages = [row["age"] for row in r.json()["data"]]
+        assert ages == sorted(ages)
+        assert min(ages) >= 19 and max(ages) <= 34
+
+    def test_age_curve_points_match_oracle(self, client, synthetic_rows):
+        r = safe_get(client, "/analytics/age-curve")
+        for row in r.json()["data"]:
+            sample = [s for s in synthetic_rows
+                      if s["idade"] == row["age"] and s["jogos_jogados"] >= 20]
+            expected = sum(s["pontos"] for s in sample) / len(sample)
+            assert abs(float(row["avg_points"]) - expected) <= 0.06
+
+    # --- Roster profile --------------------------------------------------
+
+    def test_roster_profile_returns_200_for_season(self, client):
+        r = safe_get(client, "/analytics/roster-profile?season=2010-11")
+        assert r.status_code == 200
+        body = r.json()
+        assert body["season"] == "2010-11"
+        assert body["count"] == len(body["data"]) > 0
+        for field in ["team", "players", "avg_age", "top_scorers"]:
+            assert field in body["data"][0]
+
+    def test_roster_profile_player_counts_match_oracle(self, client, synthetic_rows):
+        r = safe_get(client, "/analytics/roster-profile?season=2010-11")
+        for team_row in r.json()["data"]:
+            roster = [s for s in synthetic_rows
+                      if s["season"] == "Epoca2010-11" and s["equipa"] == team_row["team"]
+                      and s["jogos_jogados"] >= 20]
+            assert team_row["players"] == len(roster)
+
+    def test_roster_profile_top_scorers_match_oracle(self, client, synthetic_rows):
+        r = safe_get(client, "/analytics/roster-profile?season=2010-11")
+        for team_row in r.json()["data"]:
+            roster = [s for s in synthetic_rows
+                      if s["season"] == "Epoca2010-11" and s["equipa"] == team_row["team"]
+                      and s["jogos_jogados"] >= 20]
+            expected = [s["jogador"] for s in sorted(roster, key=lambda s: (-s["pontos"], s["jogador"]))[:3]]
+            assert team_row["top_scorers"] == expected
+
+    def test_roster_profile_rejects_malformed_season(self, client):
+        r = safe_get(client, "/analytics/roster-profile?season=2010")
+        assert r.status_code == 422
+
+    # --- Style evolution -------------------------------------------------
+
+    def test_style_evolution_returns_five_eras_with_valid_shares(self, client):
+        r = safe_get(client, "/analytics/style-evolution")
+        assert r.status_code == 200
+        data = r.json()["data"]
+        assert len(data) == 5
+        for era in data:
+            assert 0 < era["three_point_attempt_share_pct"] < 100
+            assert 0 < era["offensive_rebound_share_pct"] < 100
+
+
 class TestPlayersEndpoint:
     """Tests for the GET /players/ endpoint with various filters."""
 

@@ -189,6 +189,11 @@ Accuracy metrics are not published yet. They will be reported once a documented 
 | Analytics - Young Stars | https://nba-data-platform-api.onrender.com/analytics/young-stars |
 | Player Career | https://nba-data-platform-api.onrender.com/analytics/players/{name}/career |
 | All-Time Records | https://nba-data-platform-api.onrender.com/analytics/all-time-records |
+| Analytics - True Shooting | https://nba-data-platform-api.onrender.com/analytics/true-shooting |
+| Analytics - Career Totals | https://nba-data-platform-api.onrender.com/analytics/players/{name}/totals |
+| Analytics - Age Curve | https://nba-data-platform-api.onrender.com/analytics/age-curve |
+| Analytics - Roster Profile | https://nba-data-platform-api.onrender.com/analytics/roster-profile?season=2010-11 |
+| Analytics - Style Evolution | https://nba-data-platform-api.onrender.com/analytics/style-evolution |
 
 > Free tier - cold start may take 30-60 seconds after inactivity. The frontend shows a notice and auto-hides it once the API responds.
 

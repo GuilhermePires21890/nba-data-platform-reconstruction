@@ -5,11 +5,7 @@ seeded with synthetic data. No request leaves the machine, so the tests do not
 depend on Render, on deploy timing, or on the production database.
 """
 
-import os
-
 import pytest
-
-LOCAL_HOSTS = {"localhost", "127.0.0.1", "::1"}
 
 
 @pytest.fixture(scope="session")
@@ -21,22 +17,17 @@ def synthetic_rows():
 
 @pytest.fixture(scope="session")
 def seeded_database(synthetic_rows):
-    """Replace player_stats in the test database with synthetic rows.
+    """Replace player_stats in the dedicated test database with synthetic rows.
 
-    The table is dropped and recreated, so this must never point at a real
-    database. Refuse to run unless the host is local.
+    The safety guards live in synthetic_data.load_into_database(). If they refuse,
+    the whole run stops with exit code 2 before any connection or DDL executes.
     """
-    host = os.getenv("POSTGRES_HOST", "localhost")
-    if host not in LOCAL_HOSTS:
-        pytest.exit(
-            f"Refusing to reseed a non-local database (POSTGRES_HOST={host!r}). "
-            "Contract tests only run against a local test database.",
-            returncode=2,
-        )
+    from synthetic_data import ResetRefused, load_into_database
 
-    from synthetic_data import load_into_database
-
-    load_into_database(synthetic_rows)
+    try:
+        load_into_database(synthetic_rows)
+    except ResetRefused as exc:
+        pytest.exit(str(exc), returncode=2)
     yield
 
 

@@ -17,6 +17,9 @@ import random
 from pathlib import Path
 
 import psycopg2
+from dotenv import load_dotenv
+
+load_dotenv()
 
 SEASONS = [f"Epoca{year}-{str(year + 1)[-2:]}" for year in range(1996, 2021)]  # 25 seasons
 TEAMS = [f"T{i:02d}" for i in range(1, 7)]

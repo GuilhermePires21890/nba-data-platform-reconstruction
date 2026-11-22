@@ -5,12 +5,16 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+password = os.getenv("POSTGRES_PASSWORD")
+if not password:
+    raise RuntimeError("POSTGRES_PASSWORD is required")
+
 DB_CONFIG = {
     "host": os.getenv("POSTGRES_HOST", "localhost"),
     "port": os.getenv("POSTGRES_PORT", "5432"),
     "dbname": os.getenv("POSTGRES_DB", "nba_data_platform"),
     "user": os.getenv("POSTGRES_USER", "nba_admin"),
-    "password": os.getenv("POSTGRES_PASSWORD", "nba_password"),
+    "password": password,
 }
 
 

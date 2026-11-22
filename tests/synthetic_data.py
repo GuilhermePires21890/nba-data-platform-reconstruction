@@ -201,7 +201,7 @@ def load_into_database(rows: list[dict]) -> None:
         port=os.getenv("POSTGRES_PORT", "5432"),
         dbname=os.getenv("POSTGRES_DB", "nba_data_platform"),
         user=os.getenv("POSTGRES_USER", "nba_admin"),
-        password=os.getenv("POSTGRES_PASSWORD", "nba_password"),
+        password=os.environ["POSTGRES_PASSWORD"],
     )
     try:
         with conn, conn.cursor() as cur:

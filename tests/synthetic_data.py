@@ -17,6 +17,9 @@ import random
 from pathlib import Path
 
 import psycopg2
+from dotenv import load_dotenv
+
+load_dotenv()
 
 SEASONS = [f"Epoca{year}-{str(year + 1)[-2:]}" for year in range(1996, 2021)]  # 25 seasons
 TEAMS = [f"T{i:02d}" for i in range(1, 7)]
@@ -201,7 +204,7 @@ def load_into_database(rows: list[dict]) -> None:
         port=os.getenv("POSTGRES_PORT", "5432"),
         dbname=os.getenv("POSTGRES_DB", "nba_data_platform"),
         user=os.getenv("POSTGRES_USER", "nba_admin"),
-        password=os.getenv("POSTGRES_PASSWORD", "nba_password"),
+        password=os.environ["POSTGRES_PASSWORD"],
     )
     try:
         with conn, conn.cursor() as cur:

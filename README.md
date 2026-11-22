@@ -310,11 +310,23 @@ source .venv/bin/activate  # macOS/Linux
 pip install -r requirements.txt
 ```
 
-### 5. Run the isolated test suite
+### 5. Run the tests
+
+The contract tests reset `player_stats` in a dedicated test database. They refuse to run unless `ALLOW_TEST_DB_RESET` is exactly `1`, `POSTGRES_HOST` is local, the database name ends in `_test`, and none of `PGHOSTADDR`, `PGSERVICE` or `PGSERVICEFILE` is set. Create the test database once (docker compose provisions only `nba_data_platform`):
 
 ```bash
-pytest tests -v
+docker exec nba_postgres createdb -U nba_admin nba_data_platform_test
 ```
+
+Run the contract tests with the reset enabled for that command only:
+
+```bash
+POSTGRES_DB=nba_data_platform_test ALLOW_TEST_DB_RESET=1 python -m pytest tests/test_api_contracts.py -v
+```
+
+Do not run `pytest tests -v` without these variables. When the guards refuse, the contract module stops the whole pytest run with exit code 2. Which other modules have already run by then depends on pytest's collection order, so do not rely on any particular set of results.
+
+The reset opt-in must be supplied explicitly on the command line for each run. Do not set `ALLOW_TEST_DB_RESET` in `.env`, in a shell profile, or in any other persistent configuration.
 
 ### 6. Verify the platform
 

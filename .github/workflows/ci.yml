@@ -54,10 +54,12 @@ jobs:
         env:
           POSTGRES_HOST: localhost
           POSTGRES_PORT: 5432
-          POSTGRES_DB: nba_data_platform
+          POSTGRES_DB: nba_data_platform_test
           POSTGRES_USER: nba_admin
           POSTGRES_PASSWORD: nba_password
+          ALLOW_TEST_DB_RESET: "1"
         run: |
+          PGPASSWORD="$POSTGRES_PASSWORD" psql -h localhost -p 5432 -U nba_admin -d nba_data_platform -v ON_ERROR_STOP=1 -c "CREATE DATABASE nba_data_platform_test;"
           python -m pytest tests/test_api_contracts.py -v
 
       - name: Validate API startup

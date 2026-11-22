@@ -25,6 +25,53 @@ PLAYERS = [f"Jogador {i:03d}" for i in range(1, 61)]  # 60 placeholder players
 SCHEMA_FILE = Path(__file__).resolve().parents[1] / "sql" / "schema" / "create_player_stats_table.sql"
 DDL = "DROP TABLE IF EXISTS player_stats CASCADE;\n" + SCHEMA_FILE.read_text(encoding="utf-8")
 
+LOCAL_HOSTS = frozenset({"localhost", "127.0.0.1", "::1"})
+RESET_FLAG = "ALLOW_TEST_DB_RESET"
+TEST_DB_SUFFIX = "_test"
+# libpq reads these from the environment when they are not passed as arguments, and
+# they can point the connection away from POSTGRES_HOST. Any presence refuses the reset.
+LIBPQ_OVERRIDE_VARS = ("PGHOSTADDR", "PGSERVICE", "PGSERVICEFILE")
+
+
+class ResetRefused(RuntimeError):
+    """Raised when the guards refuse a destructive reset. No connection was opened."""
+
+
+def check_reset_allowed() -> None:
+    """Refuse any reset of player_stats unless every guard passes.
+
+    Checks run in this order and stop at the first failure, before any connection:
+    1. ALLOW_TEST_DB_RESET must be exactly "1".
+    2. PGHOSTADDR, PGSERVICE and PGSERVICEFILE must be absent from the environment.
+    3. POSTGRES_HOST must be a local host.
+    4. POSTGRES_DB must end with "_test".
+    Messages name the variable and its value. They never include the password.
+    """
+    if os.getenv(RESET_FLAG) != "1":
+        raise ResetRefused(
+            f"{RESET_FLAG} must be exactly '1' to reset player_stats. "
+            "Set it only for the command that intends to reset the test database."
+        )
+    for var in LIBPQ_OVERRIDE_VARS:
+        if var in os.environ:
+            raise ResetRefused(
+                f"{var} is set in the environment and can redirect the connection away from "
+                f"POSTGRES_HOST, so the reset is refused. Unset {var} for this command."
+            )
+    host = os.getenv("POSTGRES_HOST", "localhost")
+    if host not in LOCAL_HOSTS:
+        raise ResetRefused(
+            f"Refusing to reseed a non-local database (POSTGRES_HOST={host!r}). "
+            "Contract tests only run against a local test database."
+        )
+    dbname = os.getenv("POSTGRES_DB", "nba_data_platform")
+    if not dbname.endswith(TEST_DB_SUFFIX):
+        raise ResetRefused(
+            f"Refusing to reseed database {dbname!r}: its name must end with '{TEST_DB_SUFFIX}'. "
+            "Use a dedicated test database, for example nba_data_platform_test."
+        )
+
+
 COLUMNS = [
     "jogador", "equipa", "season", "idade", "jogos_jogados", "minutos_jogador",
     "pontos", "assistencias", "rebotes", "roubos", "bloqueio", "ponto_fantasia",
@@ -144,7 +191,11 @@ def record_holders(rows: list[dict]) -> dict[str, dict]:
 
 
 def load_into_database(rows: list[dict]) -> None:
-    """Create player_stats in the configured database and insert the rows."""
+    """Drop and recreate player_stats in the configured test database, then insert rows.
+
+    Destructive. The guards in check_reset_allowed() run first, before any connection.
+    """
+    check_reset_allowed()
     conn = psycopg2.connect(
         host=os.getenv("POSTGRES_HOST", "localhost"),
         port=os.getenv("POSTGRES_PORT", "5432"),

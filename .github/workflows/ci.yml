@@ -10,13 +10,15 @@ jobs:
   test:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    env:
+      CI_DB_PASSWORD: ${{ secrets.POSTGRES_PASSWORD || format('ci-{0}-{1}', github.run_id, github.run_attempt) }}
 
     services:
       postgres:
         image: postgres:16
         env:
           POSTGRES_USER: nba_admin
-          POSTGRES_PASSWORD: nba_password
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD || format('ci-{0}-{1}', github.run_id, github.run_attempt) }}
           POSTGRES_DB: nba_data_platform
         ports:
           - 5432:5432
@@ -46,7 +48,7 @@ jobs:
           POSTGRES_PORT: 5432
           POSTGRES_DB: nba_data_platform
           POSTGRES_USER: nba_admin
-          POSTGRES_PASSWORD: nba_password
+          POSTGRES_PASSWORD: ${{ env.CI_DB_PASSWORD }}
         run: |
           python -m pytest tests/test_transformation.py tests/test_dataset_schema.py -v
 
@@ -56,7 +58,7 @@ jobs:
           POSTGRES_PORT: 5432
           POSTGRES_DB: nba_data_platform_test
           POSTGRES_USER: nba_admin
-          POSTGRES_PASSWORD: nba_password
+          POSTGRES_PASSWORD: ${{ env.CI_DB_PASSWORD }}
           ALLOW_TEST_DB_RESET: "1"
         run: |
           PGPASSWORD="$POSTGRES_PASSWORD" psql -h localhost -p 5432 -U nba_admin -d nba_data_platform -v ON_ERROR_STOP=1 -c "CREATE DATABASE nba_data_platform_test;"
@@ -68,7 +70,7 @@ jobs:
           POSTGRES_PORT: 5432
           POSTGRES_DB: nba_data_platform
           POSTGRES_USER: nba_admin
-          POSTGRES_PASSWORD: nba_password
+          POSTGRES_PASSWORD: ${{ env.CI_DB_PASSWORD }}
         run: |
           uvicorn src.api.main:app --host 0.0.0.0 --port 8000 &
           sleep 3
